@@ -1,0 +1,58 @@
+<template>
+    <div class="combobox">
+
+        <!-- Input -->
+        <lightning-input
+            type="text"
+            value={value}
+            placeholder={placeholder}
+            onchange={handleInput}
+            onkeydown={handleKeyDown}
+            onfocus={handleFocus}
+            onblur={handleBlur}
+            disabled={disabled}>
+        </lightning-input>
+
+        <!-- Dropdown -->
+        <template if:true={isOpen}>
+            <div class="dropdown" onscroll={handleScroll}>
+
+                <!-- 🔄 Spinner -->
+                <template if:true={isLoading}>
+                    <div class="spinner">
+                        <lightning-spinner size="small"></lightning-spinner>
+                    </div>
+                </template>
+
+                <!-- ❌ No Results -->
+                <template if:false={hasResults}>
+                    <div class="no-results">
+                        No Results Found
+                    </div>
+                </template>
+
+                <!-- ✅ Results -->
+                <template if:true={hasResults}>
+                    <div style={spacerStyle}>
+                        <div style={translateStyle}>
+
+                            <template for:each={visibleOptions} for:item="item" for:index="i">
+                                <div key={item.value}
+                                     data-value={item.value}
+                                     data-label={item.label}
+                                     onclick={handleSelect}
+                                     class="item">
+
+                                    {item.label}
+                                </div>
+                            </template>
+
+                        </div>
+                    </div>
+                </template>
+
+            </div>
+        </template>
+
+    </div>
+</template>

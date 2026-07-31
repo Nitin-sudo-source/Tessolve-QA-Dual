@@ -1,0 +1,23 @@
+.customModal{
+
+    max-width:95% !important;
+
+    width:95% !important;
+
+}
+
+.total{
+
+    font-size:14px;
+
+    margin-top:32px;
+
+    font-weight:bold;
+
+}
+
+.slds-modal__content{
+
+    height:70vh;
+
+}

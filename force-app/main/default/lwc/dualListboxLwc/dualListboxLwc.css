@@ -1,0 +1,40 @@
+.dualListContainer{
+
+    background:#fff;
+    border-radius:14px;
+    padding:16px;
+    border:1px solid #e5e5e5;
+
+}
+
+.header{
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+
+}
+
+.header h3{
+
+    font-size:16px;
+    font-weight:700;
+
+}
+
+.header p{
+
+    color:#747474;
+    font-size:12px;
+
+}
+
+.buttonSection{
+
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:15px;
+
+}

@@ -1,0 +1,32 @@
+.dropdown {
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    background: white;
+}
+
+.item {
+    height: 36px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.item:hover {
+    background: #f3f3f3;
+}
+
+.no-results {
+    padding: 10px;
+    text-align: center;
+    color: gray;
+}
+
+.spinner {
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+}
+
+.item.selected {
+    background: #e0f3ff;
+}

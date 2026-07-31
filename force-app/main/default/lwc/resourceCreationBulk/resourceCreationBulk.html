@@ -1,0 +1,667 @@
+<template>
+
+    <div class="dashboard-container">
+        <div class="slds-modal__content modal-scroll">
+            <div class="section-container">
+
+                <!-- Loading Spinner -->
+                <template if:true={showSpinner}>
+                    <div if:true={showSpinner} class="spinner-container">
+                        <div class="loader"></div>
+                        <div class="wait-text">Please wait...</div>
+                    </div>
+                </template>
+
+                <!-- Header -->
+                <div class="dashboard-header">
+
+                    <div class="header-content">
+
+                        <!-- <lightning-icon icon-name="standard:opportunity" size="medium"></lightning-icon> &nbsp; -->
+                        <h1 class="header-title">Opportunity Resource Overview • {getBookingOpportunity}</h1>
+                    </div>
+                </div>
+                <lightning-button variant="border-filled" label={toggleLabel} icon-name={toggleIcon}
+                    icon-position="left" onclick={handleToggleAccordion}>
+                </lightning-button>
+
+
+
+                <div class="section-container">
+
+                    <div class="setion-header">
+
+                        <lightning-combobox style="border-radius: 20px;" label="Jump to Resource"
+                            options={resourceOptions} onchange={handleJumpSelect}>
+                        </lightning-combobox>
+                        <div class="header-left">
+
+
+                            <span class="section-title">
+                                Resource Line Item Details  
+                                
+                            </span>
+                            <div class="summary-number"> ({totalResources}) &nbsp; </div>
+
+                        </div>
+
+                        <div class="header-right">
+
+                            <div class="summary-container">
+
+                                <div class="summary-card">
+                                    <div class="summary-title">Total Resources</div>
+                                    <div class="summary-number"> <br/>
+                                        {otherCharges.modifiedDataInStringFormat.totalResources}
+                                    </div>
+                                </div>
+
+
+                                <template for:each={otherCharges.modifiedDataInStringFormat.currencyTotals}
+                                    for:item="item">
+
+                                    <div key={item.currency} class="summary-card">
+
+                                        <div class="summary-currency">
+                                            {item.currency}
+                                        </div>
+                                        <div class="summary-row">
+                                            <span class="summary-label">Total Revenue &nbsp;</span>
+                                            <span class="summary-value">{item.totalProjectedRevenue}</span>
+                                        </div>
+
+
+                                        <!-- <div class="summary-row">
+                                            <span class="summary-label">Total Selling Rate </span>
+                                            <span class="summary-value">{item.totalSellingRate}</span>
+                                        </div>
+                            
+                                       
+                                        <div class="summary-row">
+                                            <span class="summary-label">Avg Rate </span>
+                                            <span class="summary-value">{item.averageSellingRate}</span>
+                                        </div> -->
+
+                                    </div>
+
+                                </template>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+                    <div class="section-card">
+                        <div class="slds-accordion" style="overflow: auto;">
+
+                            <template for:each={otherCharges.newchargesData} for:item="row" for:index="index">
+
+                                <section key={row.id} data-toggle={row.id} class="slds-accordion__section">
+
+                                    <div class="slds-accordion__summary custom-summary" key={row.id}
+                                        data-toggle={row.id} onclick={toggleSection}>
+
+                                        <div class="header-container">
+
+                                            <div class="header-left" data-id={row.id} data-toggle={row.id}>
+
+                                                <lightning-icon icon-name="utility:chevronright" size="x-small"
+                                                    class="accordion-icon">
+                                                </lightning-icon>
+
+                                                <div class="header-fields">
+                                                    <div class="field-item">
+
+                                                        <span class="field-label">BU Details:</span>
+                                                        <span class="field-value">
+                                                            {row.businessUnit}
+                                                        </span>
+                                                        <!-- <span class="separator">›</span>
+                                                        {row.subBusinessUnit}
+                                                        <span class="separator">›</span>
+                                                        {row.subBusinessUnitskills}
+                                                        </span> -->
+
+                                                        <span class="meta-group">
+                                                            <span class="separator">|</span>
+                                                        <span class="field-label">Region:</span>
+                                                        <span class="field-value">{row.region}</span>
+                                                        </span>
+
+                                                        <!-- <span class="meta-group">
+                                                            <span class="separator">|</span>
+                                                            <span class="field-label">Exp:</span>
+                                                            <span class="field-value">{row.experience}Y</span>
+                                                        </span> -->
+
+                                                        <span class="meta-group">
+                                                            <span class="separator">|</span>
+                                                        <span class="field-label">Resources:</span>
+                                                        <span class="field-value">{row.numberOfResources}</span>
+                                                        </span>
+
+
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="header-actions">
+
+                                                <template if:true={row.formattedSellingRate}>
+                                                    <span class="rate-field">
+
+                                                        <span class="rate-label">
+                                                            Selling Rate 
+                                                        </span>
+
+                                                    <span class="rate-value">
+                                                            {row.formattedSellingRate}
+                                                        </span>
+
+                                                    </span>
+                                                </template>
+
+
+                                                <template if:true={row.isNonMSA}>
+                                                    <template if:true={row.nonMSASellingRate}>
+                                                        <span class="rate-field">
+
+                                                        <span class="rate-label">
+                                                            Modified Rate
+                                                        </span>
+
+                                                        <span class="rate-value" style="color:purple !important;">
+                                                            {row.formattedNonMSASellingRate}
+                                                        </span>
+
+                                                        </span>
+                                                    </template>
+                                                </template>
+                                                <template if:true={row.margin}>
+                                                    <span class="rate-field">
+
+                                                       <span class="rate-label">
+                                            <lightning-layout vertical-align="center" horizontal-align="start">
+                                                
+                                                <lightning-layout-item class="slds-m-right_xx-small">
+                                                    <span>Delta</span>
+                                                    </lightning-layout-item>
+
+                                                    <lightning-layout-item>
+                                                        <lightning-helptext
+                                                            content="Calculated as Modified Rate minus Selling Rate. Positive value indicates an increase, negative value indicates a decrease in rate.">
+                                                        </lightning-helptext>
+                                                    </lightning-layout-item>
+
+                                                    </lightning-layout>
+                                                    </span>
+
+                                                    <span class="rate-value" style="color:green !important;">
+                                                            {row.formattedMargin}
+                                                        </span>
+
+                                                    </span>
+                                                </template>
+                                                <template if:true={row.formattedProjectedRevenue}>
+                                                    <template if:true={row.projectedRevenue}>
+                                                        <span class="rate-field">
+
+                                                        <span class="rate-label">
+                                                            Projected Revenue
+                                                        </span>
+
+                                                        <span class="rate-value" style="color:red !important;">
+                                                            {row.formattedProjectedRevenue}
+                                                        </span>
+
+                                                        </span>
+                                                    </template>
+                                                </template>
+
+                                                <lightning-button-icon icon-name="utility:preview"
+                                                    variant="border-filled" alternative-text="Quick View"
+                                                    data-id={row.id} onclick={handleQuickView}>
+                                                </lightning-button-icon>
+
+                                                <!-- <template if:false={row.recordExists}> -->
+                                                <lightning-button-icon icon-name="utility:delete" variant="destructive"
+                                                    alternative-text="Delete" data-id={row.id}
+                                                    data-exists={row.recordExists} onclick={handleRemoveRow}>
+                                                </lightning-button-icon>
+                                                <!-- </template> -->
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                    <!-- CONTENT -->
+                                    <div class="slds-accordion__content" style="">
+
+                                        <div class="rli-tab-container">
+
+                                            <div class="rli-tab-container">
+
+                                                <div class="rli-grid">
+                                                    <lightning-input type="toggle" label="MSA" checked={row.isMSA}
+                                                        data-id={row.id} data-index={index} data-field="isMSA"
+                                                        onchange={handleToggle} disabled={row.isEditable}>
+                                                    </lightning-input>
+                                                </div>
+                                                <div class="rli-grid">
+
+                                                    <!-- Region -->
+                                                    <lightning-combobox label="Region" value={row.region}
+                                                        options={regionsOptions} data-id={row.id} data-field="region"
+                                                        data-index={index} onchange={handleRowChange}
+                                                        disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Business Unit -->
+                                                    <lightning-combobox label="Business Unit" value={row.businessUnit}
+                                                        options={businessUnitOptions} data-id={row.id}
+                                                        data-field="businessUnit" data-index={index}
+                                                        onchange={handleBusinessUnitChange} disabled={row.isEditable}
+                                                        required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Sub BU -->
+                                                    <lightning-combobox label="Sub Business Unit"
+                                                        value={row.subBusinessUnit} options={row.subBUOptions}
+                                                        data-id={row.id} data-field="subBusinessUnit" data-index={index}
+                                                        onchange={handleSubBUChange} disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Sub Skills -->
+                                                    <template if:true={row.subBUSkillsOptions}>
+                                                        <lightning-combobox label="Sub Skills"
+                                                            value={row.subBusinessUnitskills}
+                                                            options={row.subBUSkillsOptions} data-id={row.id}
+                                                            data-field="subBusinessUnitskills" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}
+                                                            required>
+                                                        </lightning-combobox>
+                                                    </template>
+
+
+                                                    <!-- <lightning-combobox label="Skill Category Matrix" placeholder="Search Skill Category Matrix"
+                                                        options={row.skillOptions} 
+                                                        value={row.skillCategoryMatrixName}
+                                                        data-index={index} 
+                                                        onchange={handleSkillChange} disabled={row.isEditable}>
+                                                    </lightning-combobox> -->
+                                                    <lightning-combobox label="Skill Category Matrix"
+                                                        placeholder="Skill Category Matrix"
+                                                        data-field="skillCategoryMatrixId" options={row.skillOptions}
+                                                        data-id={row.id} value={row.skillCategoryMatrixId}
+                                                        data-index={index} onchange={handleSkillChange}
+                                                        disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+                                                    <lightning-combobox options={row.experienceOptions}
+                                                        label="Experience" placeholder="Experience"
+                                                        data-field="experienceId" data-id={row.id}
+                                                        value={row.experienceId} data-index={index} onchange={handlexp}
+                                                        disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+
+
+                                                    <!-- <div class="rli-gridlookup">
+                                                        <div class="slds-grid">
+                                                            <div class="slds-col slds-size_1-of-1">
+                                                                <label class="slds-form-element__label"><span style="color:red;">*</span>Skill Category Matrix</label>
+                                                                <div class="slds-form-element__control">
+                                                                    <c-custom-lookup-lwc
+                                                                        icon-name="standard:resource_skill"
+                                                                        s-object-api-name="Skill_Category_Matrix__c"
+                                                                        data-name="Skill_Category_Matrix__c"
+                                                                        data-field="skillCategoryMatrixId"
+                                                                        class="inputfields" value={row.id}
+                                                                        data-id={row.id} project-id={getProjectId}
+                                                                        bu={row.businessUnit}
+                                                                        sub-bu={row.subBusinessUnit}
+                                                                        experience={row.experience} region={row.region}
+                                                                        skill={row.subBusinessUnitskills}
+                                                                        filter={getProjectId} disabled={row.isEditable}
+                                                                        default-record-b={row.isEditable}
+                                                                        default-record-id={row.skillCategoryMatrixId}
+                                                                        onlookupupdate={handleModificationSelection}
+                                                                        placeholder={searchPlaceholder}
+                                                                        data-index={index}>
+                                                                    </c-custom-lookup-lwc>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div> -->
+
+                                                    <!-- Experience -->
+                                                    <!-- <lightning-combobox label="Experience" value={row.experience}
+                                                        options={experienceOptions} data-id={row.id}
+                                                        data-field="experience" data-index={index}
+                                                        onchange={handleRowChange} disabled={row.isEditable} required>
+                                                    </lightning-combobox> -->
+
+                                                    <!-- <div class="rli-gridlookup">
+                                                        <div class="slds-grid">
+                                                            <div class="slds-col slds-size_1-of-1">
+                                                                <label class="slds-form-element__label"><span style="color:red;">*</span>Experience</label>
+                                                                <div class="slds-form-element__control">
+                                                                    <c-custom-lookup-lwc
+                                                                        icon-name="standard:asset_audit"
+                                                                        s-object-api-name="Experience__c"
+                                                                        data-name="Experience__c"
+                                                                        data-field="experienceId" class="inputfields"
+                                                                        value={row.id} data-id={row.id}
+                                                                        project-id={getProjectId} bu={row.businessUnit}
+                                                                        sub-bu={row.subBusinessUnit}
+                                                                        experience={row.experience}
+                                                                        region={row.region}
+                                                                        skill-id={row.skillCategoryMatrixId}
+                                                                        skill={row.subBusinessUnitskills}
+                                                                        filter={getProjectId} disabled={row.isEditable}
+                                                                        default-record-b={row.isEditable}
+                                                                        default-record-id={row.experienceId}
+                                                                        onlookupupdate={handleExperienceSelection}
+                                                                        placeholder={searchPlaceholderex}
+                                                                        data-index={index}>
+                                                                    </c-custom-lookup-lwc>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div> -->
+
+
+
+
+
+                                                    <!-- Sales Unit -->
+                                                    <lightning-combobox label="Sales Unit" value={row.salesUnit}
+                                                        options={salesoptions} data-id={row.id} data-field="salesUnit"
+                                                        data-index={index} onchange={handleRowChange}
+                                                        disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Billing Start Date -->
+                                                    <div class="date-wrapper">
+                                                        <lightning-input type="date" label="Billing Start Date"
+                                                            value={row.billingStartDate} data-id={row.id}
+                                                            data-field="billingStartDate" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}
+                                                            required>
+                                                        </lightning-input>
+                                                    </div>
+
+
+                                                    <!-- Number of Resources -->
+                                                    <lightning-input type="number" label="Number of Resources"
+                                                        value={row.numberOfResources} data-id={row.id}
+                                                        data-field="numberOfResources" data-index={index}
+                                                        onchange={handleRowChange} disabled={row.isEditable} required>
+                                                    </lightning-input>
+
+                                                    <!-- Duration -->
+                                                    <lightning-input type="number" step="0.01"
+                                                        label="Duration (In Month)" value={row.durationMonths}
+                                                        data-id={row.id} data-field="durationMonths" data-index={index}
+                                                        onchange={handleRowChange} disabled={row.isEditable} required>
+                                                    </lightning-input>
+
+                                                    <!-- <lightning-input type="number" label="Billing Duration (Converted Units)"
+                                                        value={row.durationMonthsCalculated} data-id={row.id}
+                                                        data-field="durationMonthsCalculated" data-index={index}
+                                                        onchange={handleRowChange} disabled="true">
+                                                    </lightning-input> -->
+
+
+
+
+                                                    <!-- Engineer -->
+                                                    <template if:false={row.isRemarksRequired}>
+                                                        <lightning-input type="text" label="Resource Name"
+                                                            value={row.engineerName} data-id={row.id}
+                                                            data-field="engineerName" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}>
+                                                        </lightning-input>
+                                                    </template>
+
+                                                    <template if:true={row.isRemarksRequired}>
+                                                        <lightning-input type="text" label="Resource Name"
+                                                            value={row.engineerName} data-id={row.id}
+                                                            data-field="engineerName" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}
+                                                            required>
+                                                        </lightning-input>
+                                                    </template>
+
+                                                    <!-- Status -->
+                                                    <lightning-combobox label="Status" value={row.status}
+                                                        options={statusOptions} data-id={row.id} data-field="status"
+                                                        data-index={index} onchange={handleRowChange}
+                                                        disabled={row.isEditable} required>
+                                                    </lightning-combobox>
+
+                                                    <!-- Sales Selling Rate -->
+                                                    <template if:true={row.isNonMSA}>
+                                                        <template if:true={row.sellingRate}>
+                                                            <div class="form-field slds-form-element">
+                                                                <label class="slds-form-element__label">
+                                                                Sales Selling Rate
+                                                            <!-- <lightning-helptext content={helptext}>
+
+                                                            </lightning-helptext> -->
+                                                                </label>
+
+                                                                <div
+                                                                    class="slds-input-has-icon slds-input-has-icon_left">
+                                                                    <span class="slds-input__icon slds-input__icon_left">{currencySymbol}</span>
+
+                                                                    <input class="slds-input currency-input"
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        value={row.nonMSASellingRate}
+                                                                        name="nonMSASellingRate"
+                                                                        data-id={row.id}
+                                                                        data-field="nonMSASellingRate"
+                                                                        data-index={index}
+                                                                        disabled={row.isEditable}
+                                                                        onchange={handleRowChangeInput}/>
+                                                                </div>
+                                                            </div>
+                                                        </template>
+                                                    </template>
+
+
+                                                    <!-- <template if:true={row.isRemarksRequired}>
+                                                        <lightning-input type="text" label="Remarks" value={row.remarks}
+                                                            data-id={row.id} data-field="remarks" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}
+                                                            required>
+                                                        </lightning-input>
+                                                    </template>-->
+
+                                                    <template if:true={row.isLostRemarksRequired}>
+                                                        <lightning-input type="text" label="Lost Remarks"
+                                                            value={row.lostremarks} data-id={row.id}
+                                                            data-field="lostremarks" data-index={index}
+                                                            onchange={handleRowChange} disabled={row.isEditable}
+                                                            required>
+                                                        </lightning-input>
+                                                    </template>
+
+                                                    <template if:true={row.isLostRemarksRequired}>
+                                                        <lightning-combobox label="Lost Reason"
+                                                            value={row.lostreasonvalue} options={lostOptions}
+                                                            data-id={row.id} data-field="lostreasonvalue"
+                                                            data-index={index} onchange={handleRowChange}
+                                                            disabled={row.isEditable} required>
+                                                        </lightning-combobox>
+                                                    </template>
+
+
+
+
+
+
+
+                                                </div>
+
+
+                                                <!-- Footer Section -->
+
+
+                                            </div>
+
+                                        </div>
+
+                                    </div>
+
+                                </section>
+
+                            </template>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="button-group">
+                <template if:true={isSaveDisabled}>
+                    <lightning-button variant="border-filled" label="Add Resource" icon-name="utility:add"
+                        icon-position="left" onclick={handleAddRow}>
+                    </lightning-button>
+                </template>
+                <template if:false={isSaveDisabled}>
+                    <lightning-button variant="border-filled" label="Add Resource" icon-name="utility:add"
+                        icon-position="left" onclick={handleAddRow}>
+                    </lightning-button>
+                </template>
+
+
+
+                <lightning-button label="Save Changes" disabled={isSaveDisabled} icon-name="utility:save"
+                    icon-position="left" variant="brand" onclick={handleSave}>
+                </lightning-button>
+            </div>
+
+
+            <template if:true={showQuickView}>
+
+                <!-- BACKDROP -->
+                <div class="preview-backdrop" onclick={closeQuickView}></div>
+
+                <!-- RIGHT PREVIEW PANEL -->
+                <div class="preview-panel">
+
+                    <!-- HEADER -->
+                    <div class="preview-header">
+                        <lightning-button-icon icon-name="utility:back" alternative-text="Back" title="Back"
+                            data-id={quickView.id} onclick={closeQuickView} class="back-button slds-accordion__section">
+                        </lightning-button-icon>
+
+                        <h2 class="preview-title">Resource Details</h2>
+
+                        <!-- <lightning-button-icon data-id={quickView.id} icon-name="utility:close" alternative-text="Close"
+                            onclick={closeQuickView}>
+                        </lightning-button-icon> -->
+
+                    </div>
+
+                    <!-- CONTENT -->
+                    <div class="preview-body">
+
+                        <table class="resource-details slds-table slds-table_cell-buffer slds-table_bordered">
+
+                            <tbody>
+
+                                <tr>
+                                    <th>Business Unit</th>
+                                    <td>{quickView.businessUnit}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Sub Business Unit</th>
+                                    <td>{quickView.subBusinessUnit}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Skill</th>
+                                    <td>{quickView.subBusinessUnitskills}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Region</th>
+                                    <td>{quickView.region}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Experience</th>
+                                    <td>{quickView.experience} Years</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Resources</th>
+                                    <td>{quickView.numberOfResources}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Duration</th>
+                                    <td>{quickView.durationMonths} Months</td>
+                                </tr>
+
+                                <!-- <tr>
+                                    <th>Start Date</th>
+                                    <td>
+                                        <lightning-formatted-date-time
+                                            value={quickView.tentativeStartDate}
+                                            year="numeric"
+                                            month="short"
+                                            day="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </td>
+                                </tr> -->
+
+                                <tr>
+                                    <th>Billing Start</th>
+                                    <td>
+                                        <lightning-formatted-date-time value={quickView.billingStartDate} year="numeric"
+                                            month="short" day="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <th>Status</th>
+                                    <td>{quickView.status}</td>
+                                </tr>
+                                <tr>
+                                    <th> Selling Rate</th>
+                                    <td> <span class="rate-value">
+                                        {quickView.formattedSellingRate}
+                                    </span></td>
+                                </tr>
+                                <tr>
+                                    <th> Projected Revenue</th>
+                                    <td> <span class="rate-value" style="color:red !important">
+                                        {quickView.formattedProjectedRevenue}
+                                    </span></td>
+                                </tr>
+
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </template>
+        </div>
+    </div>
+</template>

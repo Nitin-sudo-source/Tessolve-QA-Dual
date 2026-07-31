@@ -1,0 +1,503 @@
+<template>
+    <template if:true={showModal}>
+        <!-- Full Screen Overlay -->
+        <div class="popup-overlay">
+            <!-- Main Popup -->
+            <section class="popup-container" role="dialog" aria-modal="true" aria-labelledby="popup-title">
+                <!-- Header -->
+                <div class="popup-header">
+                    <div class="header-content">
+                        <div class="calendar-icon">
+                            <lightning-icon icon-name="utility:event" size="small" alternative-text="Calendar">
+                            </lightning-icon>
+                        </div>
+                        <div>
+                            <p class="welcome-text">
+                                Welcome Back {userName} 👋
+                            </p>
+                            <h1 id="popup-title" class="popup-title">
+                                Update Expected Closure Dates
+                            </h1>
+                            <p class="popup-description">
+                                Please review your opportunities and update
+                                the expected closure dates before continuing.
+                            </p>
+                            <div class="search-container">
+                                <lightning-icon icon-name="utility:search" size="x-small" class="search-icon">
+                                </lightning-icon>
+                                <input
+                           type="search"
+                           class="search-input"
+                           placeholder="Search opportunity, account or stage..."
+                           value={searchKey}
+                           oninput={handleSearch}
+                           />
+                            </div>
+                            <!-- <div class="result-count">
+                        {filteredCount} results
+                        </div> -->
+                            <!--  -->
+                        </div>
+                    </div>
+                    <!-- Decorative Element -->
+                    <div class="header-decoration">
+                        <div class="decor-circle decor-one"></div>
+                        <div class="decor-circle decor-two"></div>
+                    </div>
+                </div>
+                <!-- Body -->
+                <div class="popup-body">
+                    <!-- Section Heading -->
+                    <div class="section-header">
+                        <div>
+                            <!-- <h2 class="section-title">
+                        Opportunities Requiring Attention
+                        </h2> -->
+                            <!-- <p class="section-description">
+                        These opportunities require an Expected Closure Date.
+                        </p> -->
+                        </div>
+                        <!-- =====================================
+                     QUICK VIEW CHIPS
+                     ====================================== -->
+                        <div class="quick-filter-container">
+                            <div class="quick-filter-left">
+                                <!-- <span class="quick-filter-label">
+                           Quick View
+                           </span> -->
+                                <div class="quick-filter-chips">
+                                    <!-- ALL -->
+                                    <button
+                              type="button"
+                              class={allChipClass}
+                              data-filter="all"
+                              onclick={handleQuickFilter}>
+                           <span>All</span>
+                           <span class="chip-count">
+                           {allCount}
+                           </span>
+                           </button>
+                                    <!-- OVERDUE -->
+                                    <button
+                              type="button"
+                              class={overdueChipClass}
+                              data-filter="overdue"
+                              onclick={handleQuickFilter}>
+                              <lightning-icon
+                                 icon-name="utility:warning"
+                                 size="xx-small"
+                                 class="chip-icon">
+                              </lightning-icon>
+                              <span>Overdue</span>
+                              <span class="chip-count">
+                              {overdueCount}
+                              </span>
+                           </button>
+                                    <!-- THIS WEEK -->
+                                    <button
+                              type="button"
+                              class={thisWeekChipClass}
+                              data-filter="thisWeek"
+                              onclick={handleQuickFilter}>
+                              <lightning-icon
+                                 icon-name="utility:event"
+                                 size="xx-small"
+                                 class="chip-icon">
+                              </lightning-icon>
+                              <span>This Week</span>
+                              <span class="chip-count">
+                              {thisWeekCount}
+                              </span>             
+                           </button>
+                                    <!-- THIS MONTH -->
+                                    <button
+                              type="button"
+                              class={thisMonthChipClass}
+                              data-filter="thisMonth"
+                              onclick={handleQuickFilter}>
+                              <lightning-icon
+                                 icon-name="utility:date_input"
+                                 size="xx-small"
+                                 class="chip-icon">
+                              </lightning-icon>
+                              <span>This Month</span>
+                              <span class="chip-count">
+                              {thisMonthCount}
+                              </span>
+                           </button>
+                                    <!-- PENDING -->
+                                    <button
+                              type="button"
+                              class={pendingChipClass}
+                              data-filter="pending"
+                              onclick={handleQuickFilter}>
+                           <span class="status-dot pending-dot"></span>
+                           <span>Pending</span>
+                           <span class="chip-count">
+                           {pendingCount}
+                           </span>
+                           </button>
+                                    <!-- UPDATED -->
+                                    <button
+                              type="button"
+                              class={updatedChipClass}
+                              data-filter="updated"
+                              onclick={handleQuickFilter}>
+                              <lightning-icon
+                                 icon-name="utility:success"
+                                 size="xx-small"
+                                 class="chip-icon">
+                              </lightning-icon>
+                              <span>Modified</span>
+                              <span class="chip-count">
+                              {updatedCount}
+                              </span>
+                           </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="count-badge">
+                            {opportunityCount} Opportunities
+                        </div>
+                        <!-- <div class="table-toolbar">
+                     </div> -->
+                    </div>
+                    <!-- Table Placeholder -->
+                    <!-- Opportunity Table -->
+                    <div class="opportunity-table-container">
+                        <div class="table-scroll">
+                            <table class="opportunity-table">
+                                <thead>
+                                    <tr>
+                                        <th>Opportunity</th>
+                                        <th>Account</th>
+                                        <th>Stage</th>
+                                        <th>Close Date</th>
+                                        <th class="expected-header">
+                                            Expected Closure Date
+                                            <span class="required">*</span>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={paginatedOpportunities} for:item="opp">
+                                        <tr key={opp.Id}>
+                                            <!-- Opportunity -->
+                                            <!-- Opportunity -->
+                                            <td>
+                                                <div class="opportunity-cell">
+                                                    <div class="opp-icon">
+                                                        <lightning-icon icon-name="standard:opportunity" size="small"
+                                                            alternative-text="Opportunity">
+                                                        </lightning-icon>
+                                                    </div>
+                                                    <div class="opportunity-wrapper" data-id={opp.opportunityId}
+                                                        onmouseenter={handleOpportunityEnter}
+                                                        onmouseleave={handleOpportunityLeave}>
+                                                        <!-- Actual Opportunity Name -->
+                                                        <div class="opportunity-name">
+                                                            {opp.opportunityName}
+                                                        </div>
+                                                        <!-- Opportunity Number / ID -->
+                                                        <div class="opportunity-id">
+                                                            {opp.oppIdFormat}
+                                                        </div>
+                                                        <!-- ==========================
+                                             HOVER SUMMARY
+                                             ========================== -->
+                                                        <template if:true={opp.showSummary}>
+                                                            <section class="summary-card"
+                                                                onmouseenter={handleSummaryEnter}
+                                                                onmouseleave={handleSummaryLeave}>
+
+
+                                                                <!-- HEADER -->
+                                                                <div class="summary-card-header">
+
+                                                                    <div class="summary-label">
+                                                                        Opportunity Summary
+                                                                    </div>
+
+                                                                    <div class="summary-title">
+                                                                        {opp.opportunityName}
+                                                                    </div>
+
+                                                                    <div class="summary-id">
+                                                                        {opp.oppIdFormat}
+                                                                    </div>
+
+                                                                </div>
+
+
+                                                                <!-- BODY -->
+                                                                <div class="summary-card-body">
+
+                                                                    <div class="summary-row">
+                                                                        <span class="summary-key">
+                                                                                Account
+                                                                            </span>
+
+                                                                        <strong class="summary-value">
+                                                                                {opp.accountName}
+                                                                            </strong>
+                                                                    </div>
+
+
+                                                                    <div class="summary-row">
+                                                                        <span class="summary-key">
+                                                                                                    Stage
+                                                                                                </span>
+
+                                                                        <span class="summary-stage">
+                                                                                                {opp.stageName}
+                                                                                            </span>
+                                                                    </div>
+
+
+                                                                    <div class="summary-row">
+                                                                        <span class="summary-key">
+                                                                                            Owner
+                                                                                        </span>
+
+                                                                        <strong class="summary-value">
+                                                                                                {opp.ownerName}
+                                                                                            </strong>
+                                                                    </div>
+
+
+                                                                    <div class="summary-divider"></div>
+
+
+                                                                    <div class="summary-row">
+
+                                                                        <span class="summary-key">
+                                                                                                    Close Date
+                                                                                                </span>
+
+                                                                        <div class="summary-value-column">
+
+                                                                            <lightning-formatted-date-time
+                                                                                value={opp.closeDate} year="numeric"
+                                                                                month="short" day="2-digit"
+                                                                                time-zone="UTC">
+                                                                            </lightning-formatted-date-time>
+
+                                                                            <template if:true={opp.isOverdue}>
+                                                                                <span class="summary-overdue">
+                                                                                                    ⚠ {opp.overdueDays} days overdue
+                                                                                                </span>
+                                                                            </template>
+
+                                                                        </div>
+
+                                                                    </div>
+
+
+                                                                    <div class="summary-row">
+
+                                                                        <span class="summary-key">
+                                                                                            Expected Closure
+                                                                                        </span>
+
+                                                                        <strong class="summary-value">
+
+                                                                            <lightning-formatted-date-time
+                                                                                value={opp.ExpectedClosureDate}
+                                                                                year="numeric"
+                                                                                month="short"
+                                                                                day="2-digit"
+                                                                                time-zone="UTC">
+                                                                            </lightning-formatted-date-time>
+
+                                                                                                 </strong>
+
+                                                                    </div>
+
+
+                                                                    <div class="summary-divider"></div>
+
+
+                                                                    <div class="summary-row">
+                                                                        <span class="summary-key">
+                                                                                            TCV
+                                                                                        </span>
+
+                                                                        <strong class="summary-value">
+                                                                                         {opp.formattedTcv}
+                                                                                               </strong>
+                                                                    </div>
+
+
+                                                                    <div class="summary-row">
+                                                                        <span class="summary-key">
+                                                                                        ACV
+                                                                                    </span>
+
+                                                                        <strong class="summary-value">
+                                                                                                                {opp.formattedAcv}
+                                                                                                        </strong>
+                                                                    </div>
+
+
+                                                                    <!-- <div class="summary-row">
+                                                                            <span class="summary-key">
+                                                                                                Probability
+                                                                                            </span>
+
+                                                                       <strong class="summary-value">
+                                                                            {opp.probability}%
+                                                                        </strong> -->
+                                                                    <!-- </div> -->
+
+                                                                </div>
+
+                                                            </section>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <!-- Account -->
+                                            <td>
+                                                <div class="account-cell">
+                                                    <lightning-icon icon-name="utility:company" size="xx-small"
+                                                        alternative-text="Account">
+                                                    </lightning-icon>
+                                                    <span>
+                                       {opp.accountName}
+                                       </span>
+                                                </div>
+                                            </td>
+                                            <!-- Stage -->
+                                            <td>
+                                                <span class="stage-badge">
+                                    {opp.stageName}
+                                    </span>
+                                            </td>
+                                            <!-- Close Date -->
+                                            <td>
+                                                <div class="close-date">
+                                                    <lightning-icon icon-name="utility:event" size="xx-small"
+                                                        alternative-text="Close Date">
+                                                    </lightning-icon>
+                                                    <lightning-formatted-date-time value={opp.closeDate} year="numeric"
+                                                        month="short" day="2-digit" time-zone="UTC">
+                                                    </lightning-formatted-date-time>
+                                                </div>
+                                            </td>
+                                            <!-- Expected Closure Date -->
+                                            <td>
+                                                <div class="date-input-wrapper">
+                                                    <!-- <lightning-input type="date" variant="label-hidden"
+                                                        value={opp.ExpectedClosureDate} data-id={opp.opportunityId}
+                                                        onchange={handleDateChange}>
+                                                    </lightning-input> -->
+                                                    <lightning-input type="date" variant="label-hidden"
+                                                        value={opp.ExpectedClosureDate} data-id={opp.opportunityId}
+                                                        onchange={handleDateChange}>
+                                                    </lightning-input>
+                                                </div>
+                                                <template if:true={opp.ExpectedClosureDate}>
+                                                    <span class="updated-label">
+                                       ✓ Modified
+                                       </span>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    <template if:false={filteredCount}>
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="no-results">
+                                                    <lightning-icon icon-name="utility:search" size="small">
+                                                    </lightning-icon>
+                                                    <div class="no-results-title">
+                                                        No opportunities found
+                                                    </div>
+                                                    <div class="no-results-text">
+                                                        Try searching with a different
+                                                        Opportunity, Account or Stage.
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Information Box -->
+                    <!-- <div class="info-box">
+                  <div class="info-icon">
+                      <lightning-icon icon-name="utility:info" size="x-small" alternative-text="Information">
+                      </lightning-icon>
+                  </div>
+                  
+                  <div>
+                      <p class="info-title">
+                          Why is this important?
+                      </p>
+                  
+                      <p class="info-description">
+                          Keeping Expected Closure Dates up to date helps
+                          improve forecasting accuracy and pipeline visibility.
+                      </p>
+                  </div>
+                  
+                  </div> -->
+                </div>
+                <!-- Footer -->
+                <div class="popup-footer">
+                    <!-- LEFT SIDE : Pagination -->
+                    <div class="footer-left">
+                        <div class="pagination-record-info">
+                            Showing {recordInformation}
+                        </div>
+                        <div class="page-info">
+                            {pageInformation}
+                        </div>
+                        <div class="pagination-actions">
+                            <button
+                        type="button"
+                        class="pagination-button"
+                        onclick={handlePrevious}
+                        disabled={isPreviousDisabled}>
+                     ← Previous
+                     </button>
+                            <div class="current-page">
+                                {currentPage}
+                            </div>
+                            <button
+                        type="button"
+                        class="pagination-button"
+                        onclick={handleNext}
+                        disabled={isNextDisabled}>
+                     Next →
+                     </button>
+                        </div>
+                    </div>
+                    <!-- RIGHT SIDE : Actions -->
+                    <div class="footer-right">
+                        <button
+                     class="secondary-button"
+                     type="button"
+                     onclick={handleSaveLater}>
+                  Do this Later
+                  </button>
+                        <button
+                     class="primary-button"
+                     type="button"
+                     onclick={handleContinue}>
+                  {saveButtonLabel}
+                  <!-- <span class="button-arrow">
+                  →
+                  </span> -->
+                  </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </template>
+
+    <c-notification-overlay onclose={handleNotificationClose}>
+    </c-notification-overlay>
+</template>

@@ -1,0 +1,144 @@
+<template>
+
+    <!-- Header -->
+    <div class="header">
+
+        <div>
+            <h2 class="title">{title}</h2>
+            <div class="subtitle">
+                {selectedCount} Selected
+            </div>
+        </div>
+
+        <div class="searchBox">
+            <lightning-input type="search" variant="label-hidden" placeholder="Search fields..." value={searchKey}
+                onchange={handleSearch}>
+            </lightning-input>
+        </div>
+
+    </div>
+
+    <!-- Body -->
+    <div class="container">
+
+        <!-- Available -->
+        <div class="panel">
+
+            <div class="panelHeader">
+                Available Fields
+            </div>
+
+            <!-- <div class="panelToolbar">
+
+                <lightning-button-icon icon-name="utility:up" variant="bare" title="Move Up" onclick={moveAvailableUp}>
+                </lightning-button-icon>
+
+                <lightning-button-icon icon-name="utility:down" variant="bare" title="Move Down"
+                    onclick={moveAvailableDown}>
+                </lightning-button-icon>
+
+            </div> -->
+
+            <div class="list">
+
+                <template if:true={availableColumns.length}>
+                    <template for:each={availableColumns} for:item="col">
+
+                        <div key={col.value} class="row" onclick={handleAvailableSelect}>
+
+                            <div class="left">
+                                <span>{col.label}</span>
+                            </div>
+
+                            <lightning-button-icon icon-name="utility:add" variant="bare" alternative-text="Add"
+                                data-value={col.value} onclick={handleAdd}>
+                            </lightning-button-icon>
+
+                        </div>
+
+                    </template>
+                </template>
+
+                <template if:false={availableColumns.length}>
+                    <div class="empty">
+                        All available fields are selected.
+                    </div>
+                </template>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Selected -->
+        <div class="panel">
+
+            <div class="panelHeader">
+                Displayed Columns
+                 <div class="panelToolbar">
+
+                <lightning-button-icon icon-name="utility:up" variant="bare" title="Move Up" onclick={moveSelectedUp}>
+                </lightning-button-icon>
+
+                <lightning-button-icon icon-name="utility:down" variant="bare" title="Move Down"
+                    onclick={moveSelectedDown}>
+                </lightning-button-icon>
+
+            </div>
+            </div>
+
+           
+
+
+            <div class="list">
+
+                <template if:true={selectedColumns.length}>
+
+                    <template for:each={selectedColumns} for:item="col" for:index="index">
+
+                        <div key={col.value} class={col.cssClass} draggable={col.draggable} data-index={index}
+                            data-value={col.value} ondragstart={handleDragStart} ondragover={handleDragOver}
+                            ondrop={handleDrop} ondragend={handleDragEnd}  onclick={handleDisplayedSelect}>
+
+                            <div class="left">
+
+                                <template if:true={col.locked}>
+                                    <lightning-icon icon-name="utility:lock" size="xx-small">
+                                    </lightning-icon>
+                                </template>
+
+                                <template if:false={col.locked}>
+                                    <lightning-icon icon-name="utility:rows" size="xx-small">
+                                    </lightning-icon>
+                                </template>
+
+                                <span>{col.label}</span>
+
+                            </div>
+
+                            <template if:false={col.locked}>
+                                <lightning-button-icon icon-name="utility:close" variant="bare" data-value={col.value}
+                                    onclick={handleRemove}>
+                                </lightning-button-icon>
+                            </template>
+
+                        </div>
+
+                    </template>
+
+                </template>
+
+                <template if:false={selectedColumns.length}>
+                    <div class="empty">
+                        No columns selected.
+                    </div>
+                </template>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</template>

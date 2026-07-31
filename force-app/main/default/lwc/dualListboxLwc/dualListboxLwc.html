@@ -1,0 +1,40 @@
+<template>
+    <div class="dualListContainer">
+
+        <div class="header">
+            <div>
+                <h3>{label}</h3>
+                <p>{selectedCount}</p>
+            </div>
+        </div>
+
+        <lightning-dual-listbox
+            name="dualListbox"
+            source-label="Available Fields"
+            selected-label="Displayed Columns"
+            options={options}
+            value={selectedValues}
+            onchange={handleChange}
+            disabled={disabled}>
+        </lightning-dual-listbox>
+
+        <template if:true={showOrdering}>
+            <div class="buttonSection">
+
+                <lightning-button-icon
+                    icon-name="utility:up"
+                    onclick={moveUp}
+                    alternative-text="Move Up">
+                </lightning-button-icon>
+
+                <lightning-button-icon
+                    icon-name="utility:down"
+                    onclick={moveDown}
+                    alternative-text="Move Down">
+                </lightning-button-icon>
+
+            </div>
+        </template>
+
+    </div>
+</template>

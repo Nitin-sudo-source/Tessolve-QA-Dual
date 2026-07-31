@@ -1,0 +1,115 @@
+<template>
+    <template if:true={isOpen}>
+
+        <div class="overlay" onclick={handleBackdropClick}></div>
+
+        <section
+            class="notification-panel"
+            role="dialog"
+            aria-modal="true">
+
+            <div class={headerClass}>
+
+                <div class="header-left">
+
+                    <lightning-icon
+                        icon-name={iconName}
+                        variant="inverse"
+                        size="small">
+                    </lightning-icon>
+
+                    <div class="header-content">
+
+                        <h2>{title}</h2>
+
+                        <template if:true={subtitle}>
+                            <p>{subtitle}</p>
+                        </template>
+
+                    </div>
+
+                </div>
+
+                <lightning-button-icon
+                    icon-name="utility:close"
+                    alternative-text="Close"
+                    variant="bare-inverse"
+                    onclick={close}>
+                </lightning-button-icon>
+
+            </div>
+
+            <div class="body">
+
+                <template if:true={message}>
+                    <div class="summary">
+
+                        <lightning-formatted-text
+                            value={message}>
+                        </lightning-formatted-text>
+
+                    </div>
+                </template>
+
+                <template if:true={hasErrors}>
+
+                    <div class="error-container">
+
+                        <template
+                            for:each={errors}
+                            for:item="item">
+
+                            <div
+                                key={item.id}
+                                class="error-card">
+
+                                <div class="opp">
+
+                                    <lightning-icon
+                                        icon-name="utility:record"
+                                        size="xx-small">
+                                    </lightning-icon>
+
+                                    <span>{item.opportunity}</span>
+
+                                </div>
+
+                                <div class="reason">
+
+                                    {item.reason}
+
+                                </div>
+
+                            </div>
+
+                        </template>
+
+                    </div>
+
+                </template>
+
+            </div>
+
+            <footer class="footer">
+
+                <lightning-button
+                    label="Copy Details"
+                    icon-name="utility:copy"
+                    onclick={copyDetails}>
+                </lightning-button>
+
+                <lightning-button
+                    variant="brand"
+                    label="OK"
+                    onclick={close}>
+                </lightning-button>
+
+            </footer>
+
+        </section>
+
+         <!-- <div class="slds-backdrop slds-backdrop_open"></div> -->
+
+    </template>
+     <!-- <div class="slds-backdrop slds-backdrop_open"></div> -->
+</template>

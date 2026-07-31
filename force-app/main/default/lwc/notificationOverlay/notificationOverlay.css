@@ -1,0 +1,360 @@
+/* ==========================================================
+   Overlay
+========================================================== */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .35);
+    backdrop-filter: blur(5px);
+    z-index: 9998;
+    animation: fadeIn .25s ease;
+}
+
+/* ==========================================================
+   Main Panel
+========================================================== */
+
+.notification-panel {
+
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: min(900px, 94vw);
+
+    max-height: 88vh;
+
+    display: flex;
+    flex-direction: column;
+
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    background: rgba(255,255,255,.97);
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.25);
+
+    z-index: 9999;
+
+    animation: popup .25s ease;
+}
+
+/* ==========================================================
+   Header
+========================================================== */
+
+.header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 18px 24px;
+
+    color: #fff;
+}
+
+.header-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+}
+
+.header-content{
+
+    display:flex;
+
+    /* flex-direction:column; */
+}
+
+.header h2{
+
+    margin:0;
+
+    font-size:22px;
+
+    font-weight:700;
+}
+
+.header p{
+
+    margin-top:4px;
+
+    opacity:.92;
+
+    font-size:13px;
+}
+
+/* ==========================================================
+   Themes
+========================================================== */
+
+.success{
+
+    background:
+        linear-gradient(135deg,#2e844a,#3dbb67);
+}
+
+.error{
+
+    background:
+        linear-gradient(135deg,#ba0517,#ea3b52);
+}
+
+.warning{
+
+    background:
+        linear-gradient(135deg,#dd7a01,#ffb000);
+}
+
+.info{
+
+    background:
+        linear-gradient(135deg,#0176d3,#30a4ff);
+}
+
+/* ==========================================================
+   Body
+========================================================== */
+
+.body{
+
+    padding:24px;
+
+    overflow:auto;
+
+    flex:1;
+
+    background:#fafafa;
+}
+
+/* ==========================================================
+   Summary
+========================================================== */
+
+.summary{
+
+    padding:16px;
+
+    border-radius:12px;
+
+    background:#ffffff;
+
+    border:1px solid #dde3ea;
+
+    margin-bottom:18px;
+
+    line-height:1.7;
+
+    white-space:pre-wrap;
+
+    font-size:15px;
+
+    color:#181818;
+}
+
+/* ==========================================================
+   Error Cards
+========================================================== */
+
+.error-container{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:14px;
+}
+
+.error-card{
+
+    background:#fff;
+
+    border-left:6px solid #ea001e;
+
+    border-radius:12px;
+
+    padding:18px;
+
+    box-shadow:
+        0 4px 12px rgba(0,0,0,.08);
+
+    transition:.2s;
+}
+
+.error-card:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 10px 20px rgba(0,0,0,.12);
+}
+
+/* ==========================================================
+   Opportunity
+========================================================== */
+
+.opp{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    color:#ba0517;
+
+    margin-bottom:10px;
+}
+
+/* ==========================================================
+   Reason
+========================================================== */
+
+.reason{
+
+    font-size:14px;
+
+    color:#444;
+
+    line-height:1.8;
+
+    white-space:pre-wrap;
+}
+
+/* ==========================================================
+   Footer
+========================================================== */
+
+.footer{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:12px;
+
+    padding:18px 24px;
+
+    background:#fff;
+
+    border-top:1px solid #dde3ea;
+}
+
+/* ==========================================================
+   Scrollbar
+========================================================== */
+
+.body::-webkit-scrollbar{
+
+    width:8px;
+}
+
+.body::-webkit-scrollbar-thumb{
+
+    background:#c6c6c6;
+
+    border-radius:10px;
+}
+
+.body::-webkit-scrollbar-track{
+
+    background:transparent;
+}
+
+/* ==========================================================
+   Mobile
+========================================================== */
+
+@media(max-width:768px){
+
+.notification-panel{
+
+    width:96vw;
+
+    max-height:92vh;
+
+    border-radius:16px;
+}
+
+.header{
+
+    padding:16px;
+}
+
+.header h2{
+
+    font-size:18px;
+}
+
+.body{
+
+    padding:18px;
+}
+
+.footer{
+
+    flex-direction:column-reverse;
+}
+
+.footer lightning-button{
+
+    width:100%;
+}
+
+}
+
+/* ==========================================================
+   Animations
+========================================================== */
+
+@keyframes popup{
+
+    from{
+
+        opacity:0;
+
+        transform:
+            translate(-50%,-55%)
+            scale(.95);
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+            translate(-50%,-50%)
+            scale(1);
+    }
+
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+    }
+
+    to{
+
+        opacity:1;
+    }
+
+}

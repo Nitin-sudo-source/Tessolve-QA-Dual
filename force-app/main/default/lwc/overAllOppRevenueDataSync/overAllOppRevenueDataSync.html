@@ -1,0 +1,506 @@
+<template>
+
+    <lightning-card>
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_2-of-4">
+                    <div class="dashboard-header">
+
+                        <h1>Revenue Projection Dashboard</h1>
+
+                        <p>
+                            Opportunity Revenue Summary • USD • Updated in Real Time
+                        </p>
+
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_2-of-4">
+
+                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-end">
+
+                        <lightning-button-group>
+
+                            <lightning-button label="All" value="ALL" variant={allVariant}
+                                onclick={handleProjectionToggle}>
+                            </lightning-button>
+
+                            <lightning-button label="Has Projection" value="HAS" variant={hasVariant}
+                                onclick={handleProjectionToggle}>
+                            </lightning-button>
+
+                            <lightning-button label="No Projection" value="NO" variant={noVariant}
+                                onclick={handleProjectionToggle}>
+                            </lightning-button>
+
+                        </lightning-button-group>
+
+                        <div class="slds-m-left_medium">
+                            <lightning-button variant="neutral" label="Clear All Filters" icon-name="utility:refresh"
+                                onclick={clearFilters}>
+                            </lightning-button>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Engagement Model" options={recordTypeNameOptions}
+                        onvaluechange={handleRecordTypeChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Stage" options={stageOptions} onvaluechange={handleStageChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Business Unit" options={businessUnitOptions}
+                        onvaluechange={handleBusinessUnitChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Geo Wise" options={geoOptions} onvaluechange={handleGeoChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Opportunity Owner" options={ownerOptions}
+                        onvaluechange={handleOwnerChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+                <div class="slds-col slds-size_2-of-12">
+                    <c-multi-select-picklist-lwc label="Bussiness Type" options={bussinessTypeOptions}
+                        onvaluechange={handleBussinessTypeChange}>
+                    </c-multi-select-picklist-lwc>
+                </div>
+
+            </div>
+
+
+            <!-- Active Filters -->
+            <template if:true={hasActiveFilters}>
+                <div class="active-filters">
+
+                    <span class="filter-title">Active Filters :</span>
+
+                    <!-- Engagement Model -->
+                    <template for:each={selectedrecordType} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="recordType"
+                            onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <!-- Stage -->
+                    <template for:each={selectedStage} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="stage" onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <!-- Business Unit -->
+                    <template for:each={selectedBusinessUnit} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="businessUnit"
+                            onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <!-- Opportunity Owner -->
+                    <template for:each={selectedOwner} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="owner" onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <!-- Geo -->
+                    <template for:each={selectedGeo} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="geo" onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <template for:each={selectedbussinessType} for:item="item">
+                        <lightning-pill key={item} label={item} name={item} data-filter="bussinesstype"
+                            onremove={removeFilter}>
+                        </lightning-pill>
+                    </template>
+
+                    <lightning-button variant="base" label="Clear All" icon-name="utility:close" onclick={clearFilters}>
+                    </lightning-button>
+
+                </div>
+            </template>
+            <!-- <div class="action-center slds-m-top_large"> -->
+
+
+
+            <!-- <div class="slds-grid slds-wrap slds-gutters">
+
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="action-card danger">
+                            🔴 Missing Revenue Projection
+                            <div>{kpi.noRP}</div>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="action-card success">
+                            🟢 Has Revenue Projection
+                            <div>{kpi.hasRP}</div>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="action-card warning">
+                            🟡 Closing This Week
+                            <div>{closingThisWeek}</div>
+                        </div>
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-4">
+                        <div class="action-card error">
+                            🔴 Close Date Expired
+                            <div>{expiredCloseDate}</div>
+                        </div>
+                    </div>
+
+                </div> -->
+
+            <!-- </div> -->
+            <div class="dashboard">
+
+
+
+
+                <div class="kpi-card blue">
+                    <lightning-icon icon-name="standard:opportunity" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Total Opportunities</div>
+                        <div class="kpi-value">{kpi.totalOpps}</div>
+                    </div>
+                </div>
+
+
+                <div class="kpi-card purple">
+                    <lightning-icon icon-name="utility:money" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Total TCV (USD)</div>
+                        <div class="kpi-value">{totalTCVFormatted}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card orange">
+                    <lightning-icon icon-name="utility:currency" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Total ACV (USD)</div>
+                        <div class="kpi-value">{totalACVFormatted}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card teal">
+                    <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Current FY Revenue</div>
+
+                        <div class="kpi-value">{cqRevenueFormatted}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card navy">
+                    <lightning-icon icon-name="utility:chart" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Next FY Revenue</div>
+
+                        <div class="kpi-value">{nqRevenueFormatted}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card gold">
+                    <lightning-icon icon-name="utility:warning" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Extended Revenue</div>
+                        <div class="kpi-value">{extendedRevenueFormatted}</div>
+                    </div>
+                </div>
+                <div class="kpi-card green">
+                    <lightning-icon icon-name="utility:success" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">Has Revenue Projection</div>
+                        <div class="kpi-value">{kpi.hasRP}</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card red">
+                    <lightning-icon icon-name="utility:error" size="small"></lightning-icon>
+
+                    <div class="kpi-content">
+                        <div class="kpi-title">No Revenue Projection</div>
+                        <div class="kpi-value">{kpi.noRP}</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- <div class="slds-grid slds-wrap slds-gutters"> -->
+
+        <!-- <lightning-card title="Stage-wise Revenue">
+                <div class="chart-container">
+                    <canvas class="stageChart"></canvas>
+                </div>
+            </lightning-card>
+            <lightning-card title="Owner-wise Revenue">
+                <div class="chart-container">
+                    <canvas class="ownerChart"></canvas>
+                </div>
+            </lightning-card>
+            <lightning-card title="Record Type-wise Revenue">
+                <div class="chart-container">
+                    <canvas class="recordTypeChart"></canvas>
+                </div>
+            </lightning-card>
+            <lightning-card title="Revenue Projection Status">
+                <div class="chart-container">
+                    <canvas class="statusChart"></canvas>
+                </div>
+            </lightning-card>
+
+
+        </div> -->
+        <!-- <lightning-button-icon icon-name="utility:settings" alternative-text="Choose Columns" title="Choose Columns"
+            onclick={openColumnModal}>
+        </lightning-button-icon> -->
+
+        <!-- <div class="slds-grid slds-grid_align-end slds-m-bottom_small"> -->
+
+
+        <!-- <lightning-button class="slds-m-left_small" label="Export" variant="brand" onclick={handleExport}>
+            </lightning-button> -->
+
+        <!-- <lightning-button label="Export CSV" variant="brand" icon-name="utility:download" onclick={handleExport}
+                    disabled={isLoading}>
+                </lightning-button> -->
+
+        <!-- </div> -->
+
+        <template lwc:if={showColumnModal}>
+
+            <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open">
+
+
+
+                <div class="slds-modal__container">
+
+
+                    <header class="slds-modal__header">
+
+                        <h2 class="slds-text-heading_medium">
+                            Select Display Columns
+                        </h2>
+                    </header>
+
+                    <div class="slds-modal__content slds-p-around_medium">
+                        <c-column-manager title="Display Columns" columns={columnOptions}
+                            selected-values={selectedFields} locked-values={lockedFields}
+                            onvaluechange={handleColumnChange} onsave={handleSaveColumns}>
+                        </c-column-manager>
+
+                        <!-- <c-dual-listbox-lwc label="Columns" options={columnOptions} value={selectedFields}
+                            onvaluechange={handleFieldSelection}>
+                        </c-dual-listbox-lwc> -->
+
+                    </div>
+
+                    <footer class="slds-modal__footer">
+                        <div class="backButton" onclick={closeColumnModal}>
+                            <lightning-button-icon icon-name="utility:back" variant="bare" alternative-text="Back"
+                                size="small">
+                            </lightning-button-icon>
+
+                            <span>Back to Dashboard</span>
+                        </div>
+
+                        <!-- <lightning-button label="Reset" onclick={handleResetColumns}>
+                        </lightning-button>
+
+                        <lightning-button label="Cancel" onclick={closeColumnManager}>
+                        </lightning-button>
+
+                        <lightning-button variant="brand" label="Apply" onclick={handleSaveColumns}>
+                        </lightning-button> -->
+
+                    </footer>
+
+                    <!-- <footer class="slds-modal__footer">
+
+                        <lightning-button label="Cancel" onclick={closeColumnModal}>
+                        </lightning-button>
+
+                        <lightning-button label="Apply" variant="brand" onclick={applyColumnSelection}>
+                        </lightning-button>
+
+                    </footer> -->
+
+                </div>
+
+            </section>
+
+            <div class="slds-backdrop slds-backdrop_open"></div>
+
+        </template>
+
+        <div class="slds-p-around_medium">
+
+
+            <!-- <c-dual-listbox-lwc label="Select Columns" options={columnOptions} value={selectedFields}
+                onvaluechange={handleFieldSelection}>
+            </c-dual-listbox-lwc> -->
+
+            <!-- Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Datatable -->
+            <template if:true={hasData}>
+                <lightning-button label="Columns" icon-name="utility:table" variant="neutral" onclick={openColumnModal}>
+                </lightning-button>
+
+
+                <lightning-input type="search" label="Search" placeholder="Search Opportunity..." value={searchKey}
+                    onchange={handleSearch} class="slds-m-bottom_medium">
+                </lightning-input>
+
+                <div class="slds-grid slds-wrap slds-m-bottom_small">
+
+                    <div class="slds-col slds-size_1-of-2">
+                        <strong>Total Records:</strong> {totalRecordCount}
+                    </div>
+
+                    <div class="slds-col slds-size_1-of-2 slds-text-align_right">
+                        <strong>Showing: </strong>&nbsp;
+                        {showingFrom} - {showingTo}
+                        of {filteredRecordCount}
+                    </div>
+
+                </div>
+
+                <div class="table-container">
+
+                    <lightning-datatable key-field="opportunitySFId" data={paginatedData} columns={columns}
+                        hide-checkbox-column show-row-number-column column-widths-mode="auto"
+                        default-sort-direction={defaultSortDirection} sorted-direction={sortDirection}
+                        sorted-by={sortedBy} onsort={onHandleSort}>
+                    </lightning-datatable>
+
+                </div>
+
+                <!-- Pagination -->
+                <div class="slds-grid slds-grid_align-center slds-m-top_medium">
+
+                    <lightning-button label="Previous" icon-name="utility:chevronleft" onclick={handlePrevious}
+                        disabled={disablePrevious}>
+                    </lightning-button>
+
+                    <div class="slds-p-horizontal_large">
+                        <strong>Page {page} of {totalPages}</strong>
+                    </div>
+
+                    <lightning-button label="Next" icon-name="utility:chevronright" icon-position="right"
+                        onclick={handleNext} disabled={disableNext}>
+                    </lightning-button>
+
+                </div>
+
+            </template>
+
+            <!-- No Records -->
+            <template if:false={hasData}>
+
+                <div class="slds-text-align_center slds-p-around_large">
+
+                    <lightning-formatted-text value="No Revenue Projection records found.">
+                    </lightning-formatted-text>
+
+                </div>
+
+            </template>
+
+            <!-- Export Button -->
+            <div class="slds-m-top_large slds-text-align_center">
+
+                <lightning-button label="Export CSV" variant="brand" icon-name="utility:download" onclick={handleExport}
+                    disabled={isLoading}>
+                </lightning-button>
+
+            </div>
+
+            <!-- <p>Do Not Click work is under processing below this </p>
+            <lightning-input type="file" accept=".xls,.xlsx,.csv" label="Upload Revenue Projection Excel"
+                onchange={handleFileUpload}>
+            </lightning-input>
+
+            <template if:true={tableData.length}>
+
+                <div class="table-container">
+
+                    <table class="custom-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <template for:each={tableColumns} for:item="col">
+
+                                    <th key={col.fieldName}>
+                                        {col.label}
+                                    </th>
+
+                                </template>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <template for:each={tableData} for:item="row">
+
+                                <tr key={row.id}>
+
+                                    <template for:each={row.cells} for:item="cell">
+
+                                        <td key={cell.key}>
+                                            {cell.value}
+                                        </td>
+
+                                    </template>
+
+                                </tr>
+
+                            </template>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </template> -->
+
+
+        </div>
+
+    </lightning-card>
+
+</template>
