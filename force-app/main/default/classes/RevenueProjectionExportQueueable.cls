@@ -19,11 +19,11 @@ public with sharing class RevenueProjectionExportQueueable implements Queueable 
     
     public RevenueProjectionExportQueueable(
         Id opportunityId,
-        List<String> fieldApiNames,
-        Boolean exportAll,
-        String columnsJson,
-        Id lastOpportunityId,
-        Integer partNumber
+    List<String> fieldApiNames,
+    Boolean exportAll,
+    String columnsJson,
+    Id lastOpportunityId,
+    Integer partNumber
     ) {
         this.opportunityId = opportunityId;
         this.exportAll = exportAll;
@@ -35,8 +35,8 @@ public with sharing class RevenueProjectionExportQueueable implements Queueable 
     }
     
     /*
-* One row per Opportunity
-*/
+     * One row per Opportunity
+     */
     public class ExportWrapper {
         @AuraEnabled
         public String opportunitySFId;
@@ -127,47 +127,7 @@ public with sharing class RevenueProjectionExportQueueable implements Queueable 
         }
     }
     
-    /* public void execute(QueueableContext context) {
-List<ExportWrapper> wrappers = getPreviewData();
-//List<ExportWrapper> wrappers = getPreviewData(opportunityId, exportAll,fieldApiNames,columnsJson);
-
-List<ExportColumnWrapper> exportColumns = parseExportColumns(columnsJson);
-
-if (exportColumns.isEmpty()) {
-throw new AuraHandledException('No export columns received.');
-}
-
-Integer partNumber = 1;
-
-for (Integer start = 0; start < wrappers.size(); start += QUERY_SIZE) {
-Integer endIndex = Math.min(start + QUERY_SIZE, wrappers.size());
-
-List<String> csvRows = new List<String>();
-
-// Dynamic Header
-csvRows.add(buildCsvHeader(exportColumns));
-
-for (Integer i = start; i < endIndex; i++) {
-csvRows.add(buildCsvRow(wrappers[i], exportColumns));
-}
-
-String fileName =
-'RevenueProjectionExport_Part' +
-partNumber +
-'_' +
-Datetime.now().format('yyyyMMdd_HHmmss');
-
-ContentVersion cv = new ContentVersion();
-
-cv.Title = fileName;
-cv.PathOnClient = fileName + '.csv';
-cv.VersionData = Blob.valueOf(String.join(csvRows, '\n'));
-
-insert cv;
-
-partNumber++;
-}
-}*/
+    
     
     public void execute(QueueableContext context) {
         
@@ -191,9 +151,16 @@ partNumber++;
         // Header
         csvRows.add(buildCsvHeader(exportColumns));
         
-        // Rows
-        for (ExportWrapper wrapper : wrappers) {
-            csvRows.add(buildCsvRow(wrapper, exportColumns));
+        for (Integer i = 0; i < wrappers.size(); i++) {
+            
+            csvRows.add(
+                buildCsvRow(
+                batch.opportunities[i],
+            wrappers[i],
+            exportColumns
+                )
+                );
+            
         }
         
         String fileName =
@@ -233,29 +200,29 @@ partNumber++;
         
         System.enqueueJob(
             
-            new RevenueProjectionExportQueueable(
-                
-                opportunityId,
-                
-                fieldApiNames,
-                
-                exportAll,
-                
-                columnsJson,
-                
-                lastId,
-                
-                partNumber + 1
-                
-            )
+        new RevenueProjectionExportQueueable(
+            
+        opportunityId,
+        
+        fieldApiNames,
+        
+        exportAll,
+        
+        columnsJson,
+        
+        lastId,
+        
+        partNumber + 1
+            
+        )
             
         );
         
     }
     
     /**
-* Parse columns received from LWC
-*/
+     * Parse columns received from LWC
+     */
     private static List<ExportColumnWrapper> parseExportColumns(
         String columnsJson
     ) {
@@ -265,13 +232,13 @@ partNumber++;
         
         return (List<ExportColumnWrapper>) JSON.deserialize(
             columnsJson,
-            List<ExportColumnWrapper>.class
-        );
+        List<ExportColumnWrapper>.class
+            );
     }
     
     /**
-* Build CSV Header
-*/
+     * Build CSV Header
+     */
     private static String buildCsvHeader(List<ExportColumnWrapper> columns) {
         List<String> headers = new List<String>();
         
@@ -283,65 +250,76 @@ partNumber++;
     }
     
     /**
-* Build one CSV row
-*/
-    private static String buildCsvRow(ExportWrapper wrapper,List<ExportColumnWrapper> columns ) {
-        Map<String, Object> valueMap = buildValueMap(wrapper);
+     * Build one CSV row
+     */
+    private static String buildCsvRow(
+        Opportunity opp,
+    ExportWrapper wrapper,
+    List<ExportColumnWrapper> columns
+    ) {
+        
+        Map<String, Object> valueMap =
+            buildOpportunityValueMap(opp);
+        
+        valueMap.putAll(
+            buildRevenueProjectionValueMap(wrapper)
+            );
         
         List<String> row = new List<String>();
         
         for (ExportColumnWrapper col : columns) {
+            
             Object value = valueMap.get(col.fieldName);
             
             row.add(formatCsvValue(value));
+            
         }
         
         return String.join(row, ',');
+        
     }
     
     /**
-* Converts ExportWrapper into Map<FieldName, Value>
-*/
-    private static Map<String, Object> buildValueMap(ExportWrapper w) {
+     * Converts ExportWrapper into Map<FieldName, Value>
+     */
+    private static Map<String, Object> buildRevenueProjectionValueMap(
+        ExportWrapper wrapper
+    ) {
+        
         return new Map<String, Object>{
-            'revenueProjectionStatus' => w.revenueProjectionStatus,
-                'opportunityLink' => w.opportunityId,
-                'opportunityName' => w.opportunityName,
-                'opportunitySFId' => w.opportunitySFId,
-                'opportunityId' => w.opportunityId,
-                'opportunityOwnerName' => w.opportunityOwnerName,
-                'opportunityOwnerSFId' => w.opportunityOwnerSFId,
-                'accountId' => w.accountId,
-                'accountName' => w.accountName,
-                'location' => w.location,
-                'stageName' => w.stageName,
-                'recordTypeName' => w.recordTypeName,
-                'bussinessType' => w.bussinessType,
-                'businessUnit' => w.businessUnit,
-                'subbusinessUnit' => w.subbusinessUnit,
-                'closeDate' => w.closeDate,
-                'expectedCloseDate' => w.expectedCloseDate,
-                'createdDate' => w.createdDate,
-                'lastModifiedDate' => w.lastModifiedDate,
-                'revenueProjectionIds' => w.revenueProjectionIds,
-                'revenueProjectionIdsCount' => w.revenueProjectionIdsCount,
-                'tcvUSDFormatted' => w.tcvUSD,
-                'acvUSDFormatted' => w.acvUSD,
-                'q1Formatted' => w.q1,
-                'q2Formatted' => w.q2,
-                'q3Formatted' => w.q3,
-                'q4Formatted' => w.q4,
-                'q5Formatted' => w.q5,
-                'q6Formatted' => w.q6,
-                'q7Formatted' => w.q7,
-                'q8Formatted' => w.q8,
-                'extendedFormatted' => w.extended
-                };
-                    }
-    
+            
+            'revenueProjectionStatus'   => wrapper.revenueProjectionStatus,
+            'revenueProjectionIds'      => wrapper.revenueProjectionIds,
+            'revenueProjectionIdsCount' => wrapper.revenueProjectionIdsCount,
+            
+            'tcvUSDFormatted' => roundDecimal(wrapper.tcvUSD),
+            'acvUSDFormatted' => roundDecimal(wrapper.acvUSD),
+            
+            'q1Formatted' => roundDecimal(wrapper.q1),
+            'q2Formatted' => roundDecimal(wrapper.q2),
+            'q3Formatted' => roundDecimal(wrapper.q3),
+            'q4Formatted' => roundDecimal(wrapper.q4),
+            
+            'q5Formatted' => roundDecimal(wrapper.q5),
+            'q6Formatted' => roundDecimal(wrapper.q6),
+            'q7Formatted' => roundDecimal(wrapper.q7),
+            'q8Formatted' => roundDecimal(wrapper.q8),
+            
+            'extendedFormatted' => roundDecimal(wrapper.extended)
+                
+        };
+        
+    }
+    private static Decimal roundDecimal(Decimal value) {
+        
+        return value == null
+            ? 0
+            : value.setScale(2, RoundingMode.HALF_UP);
+        
+    }
     /**
-* Formats any Apex value into a CSV-safe string
-*/
+     * Formats any Apex value into a CSV-safe string
+     */
     private static String formatCsvValue(Object value) {
         if (value == null) {
             return '""';
@@ -362,7 +340,7 @@ partNumber++;
             Decimal d = (Decimal)value;
             text = String.valueOf(
                 d.setScale(2, RoundingMode.HALF_UP)
-            );
+                );
             
         } else if (value instanceof Integer) {
             
@@ -389,15 +367,15 @@ partNumber++;
     
     private ExportBatch getPreviewData(
         /*Id opportunityId,
-Boolean exportAll,
-List<String> fieldApiNames,
-String columnsJson*/
+    Boolean exportAll,
+    List<String> fieldApiNames,
+    String columnsJson*/
     ) {
         /*  List<Opportunity> opportunities = getOpportunities(
-opportunityId,
-exportAll
-);*/
-        List<Opportunity> opportunities = getOpportunities();
+        opportunityId,
+        exportAll
+            );*/
+            List<Opportunity> opportunities = getOpportunities();
         
         Map<String, Decimal> currencyRates = new Map<String, Decimal>();
         
@@ -443,16 +421,16 @@ exportAll
             
             wrapper.revenueProjectionIdsCount = wrapper.revenueProjectionIds.split(
                 ';'
-            )
+                )
                 .size();
             
             wrapper.revenueProjectionStatus = 'Has Revenue Projection';
             
             Decimal amount = convertToUSD(
                 rp.Quarter_Amount__c,
-                rp.CurrencyIsoCode,
-                currencyRates
-            );
+            rp.CurrencyIsoCode,
+            currencyRates
+                );
             
             assignQuarterAmount(wrapper, rp, amount);
         }
@@ -461,236 +439,247 @@ exportAll
         
         batch.opportunities = opportunities;
         
-        batch.wrappers = new List<ExportWrapper>(exportMap.values());
+        batch.wrappers = new List<ExportWrapper>();
+        
+        for (Opportunity opp : opportunities) {
+            batch.wrappers.add(exportMap.get(opp.Id));
+        }
         
         return batch;
         
         //return new List<ExportWrapper>(exportMap.values());
     }
-    
-    /* private static List<Opportunity> getOpportunities(
-Id opportunityId,
-Boolean exportAll
-) {
-if (exportAll) {
-return [
-SELECT
-Id,
-Name,
-ACV_in_Opportunity_Currency__c,
-TCV_in_Opportunity_Currency__c,
-CurrencyIsoCode,
-Opportunity_Id__c,
-Owner.Name,
-OwnerId,
-AccountId,
-Account.Name,
-StageName,
-CloseDate,
-CreatedDate,
-LastModifiedDate,
-TCV_in_USD__c,
-Annual_Contract_Value_ACV_In_USD__c,
-Expected_Close_Date__c,
-Business_Unit_BU__c,
-Sub_Business_Unit__c,
-Execution_Location__c,
-Geo__c,
-Business_Type__c,
-RecordType.Name
-FROM Opportunity
-ORDER BY LastModifiedDate DESC
-];
-}
-
-return [
-SELECT
-Id,
-Name,
-ACV_in_Opportunity_Currency__c,
-TCV_in_Opportunity_Currency__c,
-CurrencyIsoCode,
-Opportunity_Id__c,
-Owner.Name,
-OwnerId,
-AccountId,
-Account.Name,
-StageName,
-CloseDate,
-CreatedDate,
-LastModifiedDate,
-TCV_in_USD__c,
-Annual_Contract_Value_ACV_In_USD__c,
-Expected_Close_Date__c,
-Business_Unit_BU__c,
-Sub_Business_Unit__c,
-Execution_Location__c,
-Geo__c,
-Business_Type__c,
-RecordType.Name
-FROM Opportunity
-WHERE Id = :opportunityId
-ORDER BY LastModifiedDate DESC
-];
-}*/
-    
     private List<Opportunity> getOpportunities() {
         
-        if (!exportAll) {
-            return [
-                SELECT
-                Id,
-                Name,
-                ACV_in_Opportunity_Currency__c,
-                TCV_in_Opportunity_Currency__c,
-                CurrencyIsoCode,
-                Opportunity_Id__c,
-                Owner.Name,
-                OwnerId,
-                AccountId,
-                Account.Name,
-                StageName,
-                CloseDate,
-                CreatedDate,
-                LastModifiedDate,
-                TCV_in_USD__c,
-                Annual_Contract_Value_ACV_In_USD__c,
-                Expected_Close_Date__c,
-                Business_Unit_BU__c,
-                Sub_Business_Unit__c,
-                Execution_Location__c,
-                Geo__c,
-                Business_Type__c,
-                RecordType.Name
-                FROM Opportunity
-                WHERE Id = :opportunityId
-            ];
-        }
+        List<String> fields = RevenueExportUtility.getOpportunityFields();
         
-        if (lastOpportunityId == null) {
+        Map<String, Schema.SObjectField> opportunityFields =
+            Schema.SObjectType.Opportunity.fields.getMap();
+        
+        List<String> validFields = new List<String>();
+        
+        for (String fieldName : fields) {
             
-            return [
-                SELECT
-                Id,
-                Name,
-                ACV_in_Opportunity_Currency__c,
-                TCV_in_Opportunity_Currency__c,
-                CurrencyIsoCode,
-                Opportunity_Id__c,
-                Owner.Name,
-                OwnerId,
-                AccountId,
-                Account.Name,
-                StageName,
-                CloseDate,
-                CreatedDate,
-                LastModifiedDate,
-                TCV_in_USD__c,
-                Annual_Contract_Value_ACV_In_USD__c,
-                Expected_Close_Date__c,
-                Business_Unit_BU__c,
-                Sub_Business_Unit__c,
-                Execution_Location__c,
-                Geo__c,
-                Business_Type__c,
-                RecordType.Name
-                FROM Opportunity
-                ORDER BY Id
-                LIMIT :QUERY_SIZE
-            ];
+            // Allow relationship fields
+            if (fieldName.contains('.')) {
+                validFields.add(fieldName);
+                continue;
+            }
+            
+            // Validate Opportunity fields
+            if (opportunityFields.containsKey(fieldName)) {
+                validFields.add(fieldName);
+            } else {
+                System.debug(
+                    LoggingLevel.WARN,
+                'Ignoring invalid Opportunity field: ' + fieldName
+                    );
+            }
         }
         
-        return [
-            SELECT
-            Id,
-            Name,
-            ACV_in_Opportunity_Currency__c,
-            TCV_in_Opportunity_Currency__c,
-            CurrencyIsoCode,
-            Opportunity_Id__c,
-            Owner.Name,
-            OwnerId,
-            AccountId,
-            Account.Name,
-            StageName,
-            CloseDate,
-            CreatedDate,
-            LastModifiedDate,
-            TCV_in_USD__c,
-            Annual_Contract_Value_ACV_In_USD__c,
-            Expected_Close_Date__c,
-            Business_Unit_BU__c,
-            Sub_Business_Unit__c,
-            Execution_Location__c,
-            Geo__c,
-            Business_Type__c,
-            RecordType.Name
-            FROM Opportunity
-            WHERE Id > :lastOpportunityId
-            ORDER BY Id
-            LIMIT :QUERY_SIZE
-        ];
+        String query =
+            'SELECT ' +
+            String.join(validFields, ',') +
+            ' FROM Opportunity';
+        
+        if (!exportAll) {
+            
+            query += ' WHERE Id = :opportunityId';
+            
+        } else {
+            
+            if (lastOpportunityId != null) {
+                query += ' WHERE Id > :lastOpportunityId';
+            }
+            
+            query += ' ORDER BY Id';
+            query += ' LIMIT ' + QUERY_SIZE;
+        }
+        
+        return Database.query(query);
     }
     
+    
+    // private List<Opportunity> getOpportunities() {
+        
+        //     if (!exportAll) {
+            //         return [
+            //             SELECT
+            //             Id,
+            //             Name,
+            //             ACV_in_Opportunity_Currency__c,
+            //             TCV_in_Opportunity_Currency__c,
+            //             CurrencyIsoCode,
+            //             Opportunity_Id__c,
+            //             Owner.Name,
+            //             OwnerId,
+            //             AccountId,
+            //             Account.Name,
+            //             StageName,
+            //             CloseDate,
+            //             CreatedDate,
+            //             LastModifiedDate,
+            //             TCV_in_USD__c,
+            //             Annual_Contract_Value_ACV_In_USD__c,
+            //             Expected_Close_Date__c,
+            //             Business_Unit_BU__c,
+            //             Sub_Business_Unit__c,
+            //             Execution_Location__c,
+            //             Geo__c,
+            //             Business_Type__c,
+            //             RecordType.Name
+            //             FROM Opportunity
+            //             WHERE Id = :opportunityId
+            //         ];
+        //     }
+        
+        //     if (lastOpportunityId == null) {
+            
+            //         return [
+            //             SELECT
+            //             Id,
+            //             Name,
+            //             ACV_in_Opportunity_Currency__c,
+            //             TCV_in_Opportunity_Currency__c,
+            //             CurrencyIsoCode,
+            //             Opportunity_Id__c,
+            //             Owner.Name,
+            //             OwnerId,
+            //             AccountId,
+            //             Account.Name,
+            //             StageName,
+            //             CloseDate,
+            //             CreatedDate,
+            //             LastModifiedDate,
+            //             TCV_in_USD__c,
+            //             Annual_Contract_Value_ACV_In_USD__c,
+            //             Expected_Close_Date__c,
+            //             Business_Unit_BU__c,
+            //             Sub_Business_Unit__c,
+            //             Execution_Location__c,
+            //             Geo__c,
+            //             Business_Type__c,
+            //             RecordType.Name
+            //             FROM Opportunity
+            //             ORDER BY Id
+            //             LIMIT :QUERY_SIZE
+            //         ];
+        //     }
+        
+        //     return [
+        //         SELECT
+        //         Id,
+        //         Name,
+        //         ACV_in_Opportunity_Currency__c,
+        //         TCV_in_Opportunity_Currency__c,
+        //         CurrencyIsoCode,
+        //         Opportunity_Id__c,
+        //         Owner.Name,
+        //         OwnerId,
+        //         AccountId,
+        //         Account.Name,
+        //         StageName,
+        //         CloseDate,
+        //         CreatedDate,
+        //         LastModifiedDate,
+        //         TCV_in_USD__c,
+        //         Annual_Contract_Value_ACV_In_USD__c,
+        //         Expected_Close_Date__c,
+        //         Business_Unit_BU__c,
+        //         Sub_Business_Unit__c,
+        //         Execution_Location__c,
+        //         Geo__c,
+        //         Business_Type__c,
+        //         RecordType.Name
+        //         FROM Opportunity
+        //         WHERE Id > :lastOpportunityId
+        //         ORDER BY Id
+        //         LIMIT :QUERY_SIZE
+        //     ];
+    // }
+    
+    
+    private static Map<String, Object> buildOpportunityValueMap(
+        Opportunity opp
+    ) {
+        
+        Map<String, Object> valueMap = new Map<String, Object>();
+        
+        valueMap.putAll(opp.getPopulatedFieldsAsMap());
+        
+        if (opp.Owner != null) {
+            valueMap.put('Owner.Name', opp.Owner.Name);
+        }
+        
+        if (opp.Account != null) {
+            valueMap.put('Account.Name', opp.Account.Name);
+        }
+        
+        if (opp.RecordType != null) {
+            valueMap.put('RecordType.Name', opp.RecordType.Name);
+        }
+        
+        return valueMap;
+    }
     /**
-* Creates ExportWrapper from Opportunity
-*/
+     * Creates ExportWrapper from Opportunity
+     */
     private static ExportWrapper buildExportWrapper(
         Opportunity opp,
-        Map<String, Decimal> currencyRates
+    Map<String, Decimal> currencyRates
     ) {
         ExportWrapper w = new ExportWrapper();
         
-        w.opportunityName = opp.Name;
-        w.opportunitySFId = opp.Id;
-        w.opportunityId = opp.Opportunity_Id__c;
+        // w.opportunityName = opp.Name;
+        // w.opportunitySFId = opp.Id;
+        // w.opportunityId = opp.Opportunity_Id__c;
         
-        w.accountId = opp.AccountId;
-        w.accountName = opp.Account != null ? opp.Account.Name : '';
+        // w.accountId = opp.AccountId;
+        // w.accountName = opp.Account != null ? opp.Account.Name : '';
         
-        w.opportunityOwnerSFId = opp.OwnerId;
-        w.opportunityOwnerName = opp.Owner != null ? opp.Owner.Name : '';
+        // w.opportunityOwnerSFId = opp.OwnerId;
+        // w.opportunityOwnerName = opp.Owner != null ? opp.Owner.Name : '';
         
-        w.location = opp.Geo__c;
+        // w.location = opp.Geo__c;
         
-        w.stageName = opp.StageName;
-        w.recordTypeName = opp.RecordType != null ? opp.RecordType.Name : '';
+        // w.stageName = opp.StageName;
+        // w.recordTypeName = opp.RecordType != null ? opp.RecordType.Name : '';
         
-        w.bussinessType = opp.Business_Type__c;
-        w.businessUnit = opp.Business_Unit_BU__c;
-        w.subbusinessUnit = opp.Sub_Business_Unit__c;
+        // w.bussinessType = opp.Business_Type__c;
+        // w.businessUnit = opp.Business_Unit_BU__c;
+        // w.subbusinessUnit = opp.Sub_Business_Unit__c;
         
-        w.closeDate = opp.CloseDate;
-        w.expectedCloseDate = opp.Expected_Close_Date__c;
+        // w.closeDate = opp.CloseDate;
+        // w.expectedCloseDate = opp.Expected_Close_Date__c;
         
-        w.createdDate = opp.CreatedDate;
-        w.lastModifiedDate = opp.LastModifiedDate;
+        // w.createdDate = opp.CreatedDate;
+        // w.lastModifiedDate = opp.LastModifiedDate;
         
         w.revenueProjectionStatus = 'No Revenue Projection';
         w.revenueProjectionIds = '';
         
         w.tcvUSD = convertToUSD(
             opp.TCV_in_Opportunity_Currency__c,
-            opp.CurrencyIsoCode,
-            currencyRates
-        );
+        opp.CurrencyIsoCode,
+        currencyRates
+            );
         
         w.acvUSD = convertToUSD(
             opp.ACV_in_Opportunity_Currency__c,
-            opp.CurrencyIsoCode,
-            currencyRates
-        );
+        opp.CurrencyIsoCode,
+        currencyRates
+            );
         
         return w;
     }
     
     /**
-* Assign Revenue Projection amount to correct quarter
-*/
+     * Assign Revenue Projection amount to correct quarter
+     */
     private static void assignQuarterAmount(
         ExportWrapper wrapper,
-        Revenue_Projection__c rp,
-        Decimal amount
+    Revenue_Projection__c rp,
+    Decimal amount
     ) {
         if (amount == null) {
             amount = 0;
@@ -739,12 +728,12 @@ ORDER BY LastModifiedDate DESC
     }
     
     /**
-* Convert any currency to USD
-*/
+     * Convert any currency to USD
+     */
     private static Decimal convertToUSD(
         Decimal amount,
-        String currencyIsoCode,
-        Map<String, Decimal> currencyRates
+    String currencyIsoCode,
+    Map<String, Decimal> currencyRates
     ) {
         if (amount == null) {
             return 0;
@@ -766,22 +755,38 @@ ORDER BY LastModifiedDate DESC
     
     
     @AuraEnabled(cacheable=true)
-    public static List<ExportWrapper> getPreviewDataView(
+    public static List<Map<String, Object>> getPreviewDataView(
         Id opportunityId,
-        Boolean exportAll,
-        List<String> fieldApiNames,
-        String columnsJson
+    Boolean exportAll,
+    List<String> fieldApiNames,
+    String columnsJson
     ) {
         RevenueProjectionExportQueueable queueable =
             new RevenueProjectionExportQueueable(
-                opportunityId,
-                fieldApiNames,
-                exportAll,
-                columnsJson,
-                null,
-                1
+            opportunityId,
+        fieldApiNames,
+        exportAll,
+        columnsJson,
+        null,
+        1
             );
         
-        return queueable.getPreviewData().wrappers;
+        ExportBatch batch = queueable.getPreviewData();
+        
+        List<Map<String, Object>> previewRows = new List<Map<String, Object>>();
+        
+        for (Integer i = 0; i < batch.opportunities.size(); i++) {
+            
+            Map<String, Object> row =
+                buildOpportunityValueMap(batch.opportunities[i]);
+            
+            row.putAll(
+                buildRevenueProjectionValueMap(batch.wrappers[i])
+                );
+            
+            previewRows.add(row);
+        }
+        
+        return previewRows;
     }
 }

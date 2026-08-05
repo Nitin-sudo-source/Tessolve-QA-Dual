@@ -5,6 +5,7 @@ import getJobStatus from '@salesforce/apex/RevenueProjectionExportController.get
 //import getLatestExportFile from '@salesforce/apex/RevenueProjectionExportController.getLatestExportFile';
 import getLatestExportFiles from '@salesforce/apex/RevenueProjectionExportController.getLatestExportFiles';
 import getPreviewData from '@salesforce/apex/RevenueProjectionExportController.getPreviewData';
+import getExportFields from '@salesforce/apex/RevenueProjectionExportController.getExportFields';
 // import chartJs from '@salesforce/resourceUrl/ChartJS';
 // import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
@@ -82,309 +83,10 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
     }
 
     @api lockedFields = [
-        'opportunityLink'
+        'Name'
     ];
 
-    // allColumns = [
-    //     { label: 'Revenue Projection', fieldName: 'revenueProjectionStatus' },
-    //     {
-    //         label: 'Opportunity',
-    //         fieldName: 'opportunityLink',
-    //         type: 'url',
-    //         sortable: true,
-    //         typeAttributes: {
-    //             label: {
-    //                 fieldName: 'opportunityId'
-    //             },
-    //             target: '_blank'
-    //         }
-    //     },
-    //     // { label: 'Opportunity SF Id', fieldName: 'opportunitySFId', initialWidth: 180 },
-    //     // {
-    //     //     label: 'Opportunity Id',
-    //     //     fieldName: 'opportunityLink',
-    //     //     type: 'url',
-    //     //     typeAttributes: {
-    //     //         label: {
-    //     //             fieldName: 'opportunityId'
-    //     //         },
-    //     //         target: '_blank'
-    //     //     },
-    //     //     initialWidth: 160
-    //     // },
-    //     //{ label: 'Opportunity Id', fieldName: 'opportunityId', initialWidth: 160 },
-    //     // { label: 'Opportunity RecordType', fieldName: 'recordTypeName', initialWidth: 160 },
-    //     // { label: 'Owner', fieldName: 'opportunityOwnerName', initialWidth: 170 },
-    //     // { label: 'Account', fieldName: 'accountName', initialWidth: 180 },
-    //     { label: 'Stage', fieldName: 'stageName', sortable: true },
-    //     { label: 'Bussiness Type', fieldName: 'bussinessType', sortable: true },
-    //     { label: 'Bussiness Unit', fieldName: 'businessUnit', sortable: true },
-    //     { label: 'Sub Bussiness Unit', fieldName: 'subbusinessUnit', sortable: true },
-    //     // { label: 'Close Date', fieldName: 'closeDate', type: 'date' },
-    //     // { label: 'Expected Close', fieldName: 'expectedCloseDate', type: 'date', initialWidth: 150 },
 
-    //     // { label: 'TCV (USD)', fieldName: 'tcvUSD' },
-    //     // { label: 'ACV (USD)', fieldName: 'acvUSD' },
-    //     // { label: 'CQ1', fieldName: 'q1', initialWidth: 120 },
-    //     // { label: 'CQ2', fieldName: 'q2', initialWidth: 120 },
-    //     // { label: 'CQ3', fieldName: 'q3', initialWidth: 120 },
-    //     // { label: 'CQ4', fieldName: 'q4', initialWidth: 120 },
-    //     // { label: 'NQ1', fieldName: 'q5', initialWidth: 120 },
-    //     // { label: 'NQ2', fieldName: 'q6', initialWidth: 120 },
-    //     // { label: 'NQ3', fieldName: 'q7', initialWidth: 120 },
-    //     // { label: 'NQ4', fieldName: 'q8', initialWidth: 120 },
-    //     // { label: 'Extended', fieldName: 'extended' }
-    //     { label: 'TCV (USD)', fieldName: 'tcvUSDFormatted' }, // Total Contract Value
-    //     { label: 'ACV (USD)', fieldName: 'acvUSDFormatted' }, // Annual Contract Value
-
-    //     { label: 'Current FY - Q1', fieldName: 'q1Formatted' },
-    //     { label: 'Current FY - Q2', fieldName: 'q2Formatted' },
-    //     { label: 'Current FY - Q3', fieldName: 'q3Formatted' },
-    //     { label: 'Current FY - Q4', fieldName: 'q4Formatted' },
-
-    //     { label: 'Next FY - Q1', fieldName: 'q5Formatted' },
-    //     { label: 'Next FY - Q2', fieldName: 'q6Formatted' },
-    //     { label: 'Next FY - Q3', fieldName: 'q7Formatted' },
-    //     { label: 'Next FY - Q4', fieldName: 'q8Formatted' },
-
-    //     { label: 'Extended', fieldName: 'extendedFormatted' },
-    // ];
-
-
-    allColumns = [
-        {
-            label: 'Revenue Projection',
-            fieldName: 'revenueProjectionStatus',
-            sortable: true,
-            initialWidth: 180
-        },
-        {
-            label: 'Opportunity',
-            fieldName: 'opportunityLink',
-            type: 'url',
-            sortable: true,
-            initialWidth: 180,
-            typeAttributes: {
-                label: { fieldName: 'opportunityId' },
-                target: '_blank'
-            }
-        },
-        {
-            label: 'Opportunity Name',
-            fieldName: 'opportunityName',
-            sortable: true,
-            initialWidth: 250
-        },
-        {
-            label: 'Opportunity SF Id',
-            fieldName: 'opportunitySFId',
-            sortable: true,
-            initialWidth: 200
-        },
-        {
-            label: 'Opportunity Id',
-            fieldName: 'opportunityId',
-            sortable: true,
-            initialWidth: 170
-        },
-        {
-            label: 'Opportunity Owner',
-            fieldName: 'opportunityOwnerName',
-            sortable: true,
-            initialWidth: 200
-        },
-        {
-            label: 'Opportunity Owner SF Id',
-            fieldName: 'opportunityOwnerSFId',
-            sortable: true,
-            initialWidth: 200
-        },
-        {
-            label: 'Account Id',
-            fieldName: 'accountId',
-            sortable: true,
-            initialWidth: 180
-        },
-        {
-            label: 'Account Name',
-            fieldName: 'accountName',
-            sortable: true,
-            initialWidth: 220
-        },
-        {
-            label: 'Location',
-            fieldName: 'location',
-            sortable: true,
-            initialWidth: 180
-        },
-        {
-            label: 'Stage',
-            fieldName: 'stageName',
-            sortable: true,
-            initialWidth: 180
-        },
-        {
-            label: 'Record Type',
-            fieldName: 'recordTypeName',
-            sortable: true,
-            initialWidth: 200
-        },
-        {
-            label: 'Business Type',
-            fieldName: 'bussinessType',
-            sortable: true,
-            initialWidth: 180
-        },
-        {
-            label: 'Business Unit',
-            fieldName: 'businessUnit',
-            sortable: true,
-            initialWidth: 200
-        },
-        {
-            label: 'Sub Business Unit',
-            fieldName: 'subbusinessUnit',
-            sortable: true,
-            initialWidth: 220
-        },
-        {
-            label: 'Close Date',
-            fieldName: 'closeDate',
-            type: 'date',
-            sortable: true,
-            initialWidth: 150,
-            typeAttributes: {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit'
-            }
-        },
-        {
-            label: 'Expected Close Date',
-            fieldName: 'expectedCloseDate',
-            type: 'date',
-            sortable: true,
-            initialWidth: 180,
-            typeAttributes: {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit'
-            }
-        },
-        {
-            label: 'Created Date',
-            fieldName: 'createdDate',
-            type: 'date',
-            sortable: true,
-            initialWidth: 190,
-            typeAttributes: {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }
-        },
-        {
-            label: 'Last Modified Date',
-            fieldName: 'lastModifiedDate',
-            type: 'date',
-            sortable: true,
-            initialWidth: 210,
-            typeAttributes: {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }
-        },
-        {
-            label: 'Revenue Projection Ids',
-            fieldName: 'revenueProjectionIds',
-            initialWidth: 260
-        },
-        {
-            label: 'Revenue Projection Count',
-            fieldName: 'revenueProjectionIdsCount',
-            type: 'number',
-            sortable: true,
-            initialWidth: 170
-        },
-
-        // Financial Summary
-        {
-            label: 'TCV (USD)',
-            fieldName: 'tcvUSDFormatted',
-            sortable: true,
-            initialWidth: 160
-        },
-        {
-            label: 'ACV (USD)',
-            fieldName: 'acvUSDFormatted',
-            sortable: true,
-            initialWidth: 160
-        },
-
-        // Current Financial Year
-        {
-            label: 'Current FY - Q1',
-            fieldName: 'q1Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Current FY - Q2',
-            fieldName: 'q2Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Current FY - Q3',
-            fieldName: 'q3Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Current FY - Q4',
-            fieldName: 'q4Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-
-        // Next Financial Year
-        {
-            label: 'Next FY - Q1',
-            fieldName: 'q5Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Next FY - Q2',
-            fieldName: 'q6Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Next FY - Q3',
-            fieldName: 'q7Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-        {
-            label: 'Next FY - Q4',
-            fieldName: 'q8Formatted',
-            sortable: true,
-            initialWidth: 150
-        },
-
-        {
-            label: 'Extended',
-            fieldName: 'extendedFormatted',
-            sortable: true,
-            initialWidth: 160
-        }
-    ];
 
     selectedStage = '';
     selectedBusinessUnit = '';
@@ -501,65 +203,97 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
     applyFilters() {
 
+        const searchText = (this.searchKey || '').toLowerCase();
+
         this.filteredData = this.previewData.filter(row => {
 
-            // Search
+            // ===============================
+            // Global Search
+            // ===============================
+
             const matchesSearch =
-                !this.searchKey ||
+                !searchText ||
 
-                (row.opportunityName || '').toLowerCase().includes(this.searchKey) ||
-                (row.opportunitySFId || '').toLowerCase().includes(this.searchKey) ||
-                (row.opportunityId || '').toLowerCase().includes(this.searchKey) ||
-                (row.opportunityOwnerName || '').toLowerCase().includes(this.searchKey) ||
-                (row.opportunityOwnerSFId || '').toLowerCase().includes(this.searchKey) ||
-                (row.accountName || '').toLowerCase().includes(this.searchKey) ||
-                (row.accountId || '').toLowerCase().includes(this.searchKey) ||
-                (row.stageName || '').toLowerCase().includes(this.searchKey) ||
-                (row.businessUnit || '').toLowerCase().includes(this.searchKey) ||
-                (row.subbusinessUnit || '').toLowerCase().includes(this.searchKey) ||
-                (row.recordTypeName || '').toLowerCase().includes(this.searchKey) ||
-                (row.revenueProjectionStatus || '').toLowerCase().includes(this.searchKey) ||
-                (row.bussinessType || '').toLowerCase().includes(this.searchKey);
+                (row.Name || '').toLowerCase().includes(searchText) ||
+                (row.Id || '').toLowerCase().includes(searchText) ||
+                (row.Opportunity_Id__c || '').toLowerCase().includes(searchText) ||
+                (row['Owner.Name'] || '').toLowerCase().includes(searchText) ||
+                (row.OwnerId || '').toLowerCase().includes(searchText) ||
+                (row['Account.Name'] || '').toLowerCase().includes(searchText) ||
+                (row.AccountId || '').toLowerCase().includes(searchText) ||
+                (row.StageName || '').toLowerCase().includes(searchText) ||
+                (row.Business_Unit_BU__c || '').toLowerCase().includes(searchText) ||
+                (row.Sub_Business_Unit__c || '').toLowerCase().includes(searchText) ||
+                (row['RecordType.Name'] || '').toLowerCase().includes(searchText) ||
+                (row.Business_Type__c || '').toLowerCase().includes(searchText) ||
+                (row.Geo__c || '').toLowerCase().includes(searchText) ||
+                (row.revenueProjectionStatus || '').toLowerCase().includes(searchText);
 
+            // ===============================
+            // Record Type
+            // ===============================
 
-            // Engagement Model
             const matchesRecordType =
                 this.selectedrecordType.length === 0 ||
-                this.selectedrecordType.includes(row.recordTypeName);
+                this.selectedrecordType.includes(row['RecordType.Name']);
 
+            // ===============================
             // Stage
+            // ===============================
+
             const matchesStage =
                 this.selectedStage.length === 0 ||
-                this.selectedStage.includes(row.stageName);
+                this.selectedStage.includes(row.StageName);
 
+            // ===============================
             // Business Unit
+            // ===============================
+
             const matchesBusinessUnit =
                 this.selectedBusinessUnit.length === 0 ||
-                this.selectedBusinessUnit.includes(row.businessUnit);
+                this.selectedBusinessUnit.includes(row.Business_Unit_BU__c);
 
+            // ===============================
             // Owner
+            // ===============================
+
             const matchesOwner =
                 this.selectedOwner.length === 0 ||
-                this.selectedOwner.includes(row.opportunityOwnerName);
+                this.selectedOwner.includes(row['Owner.Name']);
 
+            // ===============================
             // Geo
+            // ===============================
+
             const matchesGeo =
                 this.selectedGeo.length === 0 ||
-                this.selectedGeo.includes(row.location);
+                this.selectedGeo.includes(row.Geo__c);
+
+            // ===============================
+            // Business Type
+            // ===============================
 
             const matchesBuType =
                 this.selectedbussinessType.length === 0 ||
-                this.selectedbussinessType.includes(row.bussinessType);
+                this.selectedbussinessType.includes(row.Business_Type__c);
+
+            // ===============================
+            // Revenue Projection
+            // ===============================
 
             const matchesProjection =
 
                 this.projectionFilter === 'ALL' ||
 
-                (this.projectionFilter === 'HAS' &&
-                    row.revenueProjectionStatus === 'Has Revenue Projection') ||
+                (
+                    this.projectionFilter === 'HAS' &&
+                    row.revenueProjectionStatus === 'Has Revenue Projection'
+                ) ||
 
-                (this.projectionFilter === 'NO' &&
-                    row.revenueProjectionStatus !== 'Has Revenue Projection');
+                (
+                    this.projectionFilter === 'NO' &&
+                    row.revenueProjectionStatus !== 'Has Revenue Projection'
+                );
 
             return (
                 matchesSearch &&
@@ -568,8 +302,8 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
                 matchesBusinessUnit &&
                 matchesOwner &&
                 matchesGeo &&
-                matchesProjection &&
-                matchesBuType
+                matchesBuType &&
+                matchesProjection
             );
 
         });
@@ -577,12 +311,14 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         this.calculateKPIs(this.filteredData);
 
         this.page = 1;
+
         this.totalPages = Math.max(
             1,
             Math.ceil(this.filteredData.length / this.pageSize)
         );
 
         this.updatePagination();
+
     }
     get hasActiveFilters() {
         return (
@@ -685,15 +421,248 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
         this.applyFilters();
     }
-    connectedCallback() {
-        //console.log('Connected');
-        this.loadPreviewData();
-        this.columnMap = new Map();
 
-        this.allColumns.forEach(col => {
-            this.columnMap.set(col.fieldName, col);
-        });
-        this.updateColumns();
+    loadColumns() {
+
+        this.isLoading = true;
+
+        getExportFields()
+            .then(result => {
+
+                this.allColumns = [];
+                this.columnMap = new Map();
+                this.selectedFields = [];
+                this.defaultSelectedFields = [];
+
+                //=====================================
+                // Opportunity Metadata Columns
+                //=====================================
+
+                result.forEach(field => {
+
+                    let column = {
+                        label: field.fieldLabel,
+                        fieldName: field.fieldApiName,
+                        sortable: true,
+                        initialWidth: 180
+                    };
+
+                    switch (field.dataType) {
+
+                        case 'Date':
+
+                            column.type = 'date';
+                            column.typeAttributes = {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit'
+                            };
+                            break;
+
+                        case 'Datetime':
+
+                            column.type = 'date';
+                            column.typeAttributes = {
+                                year: 'numeric',
+                                month: 'short',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            };
+                            break;
+
+                        case 'Number':
+
+                            column.type = 'number';
+                            break;
+
+                        case 'Currency':
+
+                            column.type = 'currency';
+                            column.typeAttributes = {
+                                currencyCode: 'USD'
+                            };
+                            break;
+
+                        default:
+
+                            column.type = 'text';
+
+                    }
+
+                    // Opportunity hyperlink
+                    if (field.fieldApiName === 'Name') {
+
+                        column.type = 'url';
+                        column.fieldName = 'Name';
+
+                        column.typeAttributes = {
+                            label: {
+                                fieldName: 'Name'
+                            },
+                            target: '_blank'
+                        };
+
+                    }
+
+                    this.allColumns.push(column);
+
+                    // IMPORTANT
+                    this.columnMap.set(
+                        column.fieldName,
+                        column
+                    );
+
+                    if (field.defaultSelected) {
+
+                        if (field.fieldApiName === 'Name') {
+
+                            this.selectedFields.push('Name');
+                            this.defaultSelectedFields.push('Name');
+
+                        } else {
+
+                            this.selectedFields.push(field.fieldApiName);
+                            this.defaultSelectedFields.push(field.fieldApiName);
+
+                        }
+
+                    }
+
+                });
+
+                //=====================================
+                // Revenue Projection Wrapper Columns
+                // (Only until these are moved to CMDT)
+                //=====================================
+
+                const wrapperColumns = [
+
+                    // {
+                    //     label: 'Revenue Projection',
+                    //     fieldName: 'revenueProjectionStatus'
+                    // },
+                    // {
+                    //     label: 'Revenue Projection Ids',
+                    //     fieldName: 'revenueProjectionIds'
+                    // },
+                    // {
+                    //     label: 'Revenue Projection Count',
+                    //     fieldName: 'revenueProjectionIdsCount',
+                    //     type: 'number'
+                    // },
+
+                    {
+                        label: 'TCV (USD)',
+                        fieldName: 'tcvUSDFormatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'ACV (USD)',
+                        fieldName: 'acvUSDFormatted',
+                        type: 'currency'
+                    },
+
+                    {
+                        label: 'Current FY - Q1',
+                        fieldName: 'q1Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Current FY - Q2',
+                        fieldName: 'q2Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Current FY - Q3',
+                        fieldName: 'q3Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Current FY - Q4',
+                        fieldName: 'q4Formatted',
+                        type: 'currency'
+                    },
+
+                    {
+                        label: 'Next FY - Q1',
+                        fieldName: 'q5Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Next FY - Q2',
+                        fieldName: 'q6Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Next FY - Q3',
+                        fieldName: 'q7Formatted',
+                        type: 'currency'
+                    },
+                    {
+                        label: 'Next FY - Q4',
+                        fieldName: 'q8Formatted',
+                        type: 'currency'
+                    },
+
+                    {
+                        label: 'Extended',
+                        fieldName: 'extendedFormatted',
+                        type: 'currency'
+                    }
+
+                ];
+
+                wrapperColumns.forEach(col => {
+
+                    if (!this.columnMap.has(col.fieldName)) {
+
+                        col.sortable = true;
+                        col.initialWidth = 170;
+
+                        if (col.type === 'currency') {
+
+                            col.typeAttributes = {
+                                currencyCode: 'USD'
+                            };
+
+                        }
+
+                        this.allColumns.push(col);
+
+                        this.columnMap.set(
+                            col.fieldName,
+                            col
+                        );
+
+                        this.selectedFields.push(col.fieldName);
+                        this.defaultSelectedFields.push(col.fieldName);
+
+                    }
+
+                });
+
+                this.updateColumns();
+
+                this.loadPreviewData();
+
+            })
+            .catch(error => {
+
+                this.showToast(
+                    'Error',
+                    error.body?.message || 'Unable to load columns.',
+                    'error'
+                );
+
+                this.isLoading = false;
+
+            });
+
+    }
+    connectedCallback() {
+        this.loadColumns();
+
     }
 
     applyColumnSelection() {
@@ -779,174 +748,218 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
         this.kpi = {
             totalOpps: data.length,
-            hasRP: 0,
-            noRP: 0,
             totalTCV: 0,
             totalACV: 0,
             cqRevenue: 0,
             nqRevenue: 0,
-            extendedRevenue: 0
+            extendedRevenue: 0,
+            hasRP: 0,
+            noRP: 0
         };
 
         data.forEach(row => {
 
+            // Revenue Projection Count
             if (row.revenueProjectionStatus === 'Has Revenue Projection') {
                 this.kpi.hasRP++;
             } else {
                 this.kpi.noRP++;
             }
 
-            this.kpi.totalTCV += Number(row.tcvUSD || 0);
-            this.kpi.totalACV += Number(row.acvUSD || 0);
+            // Safe Number Conversion
+            const tcv = parseFloat(row.tcvUSDFormatted) || 0;
+            const acv = parseFloat(row.acvUSDFormatted) || 0;
+
+            const q1 = parseFloat(row.q1Formatted) || 0;
+            const q2 = parseFloat(row.q2Formatted) || 0;
+            const q3 = parseFloat(row.q3Formatted) || 0;
+            const q4 = parseFloat(row.q4Formatted) || 0;
+
+            const q5 = parseFloat(row.q5Formatted) || 0;
+            const q6 = parseFloat(row.q6Formatted) || 0;
+            const q7 = parseFloat(row.q7Formatted) || 0;
+            const q8 = parseFloat(row.q8Formatted) || 0;
+
+            const extended = parseFloat(row.extendedFormatted) || 0;
+
+            // Totals
+            this.kpi.totalTCV += tcv;
+            this.kpi.totalACV += acv;
 
             this.kpi.cqRevenue +=
-                Number(row.q1 || 0) +
-                Number(row.q2 || 0) +
-                Number(row.q3 || 0) +
-                Number(row.q4 || 0);
+                q1 +
+                q2 +
+                q3 +
+                q4;
 
             this.kpi.nqRevenue +=
-                Number(row.q5 || 0) +
-                Number(row.q6 || 0) +
-                Number(row.q7 || 0) +
-                Number(row.q8 || 0);
+                q5 +
+                q6 +
+                q7 +
+                q8;
 
             this.kpi.extendedRevenue +=
-                Number(row.extended || 0);
-        });
-    }
+                extended;
 
+        });
+
+        console.log('===== KPI =====');
+        console.table(this.kpi);
+
+    }
     loadPreviewData() {
 
-        let exportColumns = [];
-
-        exportColumns = this.columns.map(col => ({
+        let exportColumns = this.columns.map(col => ({
             fieldName: col.fieldName,
             label: col.label
         }));
 
-        console.log(JSON.stringify(exportColumns, null, 2));
-
-        console.log('Export Columns:', JSON.stringify(exportColumns));
-
+        console.log('Export Columns:', JSON.stringify(exportColumns, null, 2));
 
         this.isLoading = true;
-        //console.log('Calling Apex');
 
         getPreviewData({
             opportunityId: this.recordId,
             exportAll: true,
             columns: JSON.stringify(this.selectedFields),
             exportColumns: JSON.stringify(exportColumns)
-        }).then(result => {
+        })
+            .then(result => {
 
-            //console.log('========== Preview Result ==========');
+                console.log('JSON Result:', JSON.stringify(result, null, 2));
 
-            ////console.log('Total Records:', result.length);
+                this.previewData = result
+                    .map(row => {
 
-            //console.table(result);
+                        let record = { ...row };
 
-            ////console.log('Raw Result:', result);
+                        // Opportunity Link
+                        record.opportunityLink = '/' + (row.Id || '');
 
-            //console.log('JSON Result:', JSON.stringify(result, null, 2));
+                        // --------------------------------------------------
+                        // Keep numeric values unchanged for KPI calculations
+                        // Create separate display fields for the UI
+                        // --------------------------------------------------
 
-            this.previewData = result;
+                        if (record.tcvUSDFormatted != null) {
+                            record.tcvUSDDisplay =
+                                this.formatUSD(record.tcvUSDFormatted);
+                        }
 
-            this.previewData = result
-                .map(row => ({
-                    ...row,
-                    opportunityLink: `/${row.opportunitySFId}`,
-                    tcvUSDFormatted: this.formatUSD(row.tcvUSD),
-                    acvUSDFormatted: this.formatUSD(row.acvUSD),
+                        if (record.acvUSDFormatted != null) {
+                            record.acvUSDDisplay =
+                                this.formatUSD(record.acvUSDFormatted);
+                        }
 
-                    q1Formatted: this.formatUSD(row.q1),
-                    q2Formatted: this.formatUSD(row.q2),
-                    q3Formatted: this.formatUSD(row.q3),
-                    q4Formatted: this.formatUSD(row.q4),
+                        if (record.q1Formatted != null) {
+                            record.q1Display =
+                                this.formatUSD(record.q1Formatted);
+                        }
 
-                    q5Formatted: this.formatUSD(row.q5),
-                    q6Formatted: this.formatUSD(row.q6),
-                    q7Formatted: this.formatUSD(row.q7),
-                    q8Formatted: this.formatUSD(row.q8),
+                        if (record.q2Formatted != null) {
+                            record.q2Display =
+                                this.formatUSD(record.q2Formatted);
+                        }
 
-                    extendedFormatted: this.formatUSD(row.extended)
-                }))
-                .sort((a, b) => new Date(b.lastModifiedDate) - new Date(a.lastModifiedDate));
+                        if (record.q3Formatted != null) {
+                            record.q3Display =
+                                this.formatUSD(record.q3Formatted);
+                        }
 
-            this.filteredData = [...this.previewData];
-            //this.filteredData = [...this.previewData];
-            this.calculateKPIs(this.filteredData);
-            //this.buildChartData();
-            this.totalPages = Math.ceil(
-                this.filteredData.length / this.pageSize
-            );
+                        if (record.q4Formatted != null) {
+                            record.q4Display =
+                                this.formatUSD(record.q4Formatted);
+                        }
 
-            //console.log('Total Pages:', this.totalPages);
+                        if (record.q5Formatted != null) {
+                            record.q5Display =
+                                this.formatUSD(record.q5Formatted);
+                        }
 
-            this.updatePagination();
+                        if (record.q6Formatted != null) {
+                            record.q6Display =
+                                this.formatUSD(record.q6Formatted);
+                        }
 
-            //console.log('Current Page Data:');
-            console.table(this.paginatedData);
+                        if (record.q7Formatted != null) {
+                            record.q7Display =
+                                this.formatUSD(record.q7Formatted);
+                        }
 
-            this.recordTypeNameOptions = [
-                ...new Set(this.previewData.map(r => r.recordTypeName))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                        if (record.q8Formatted != null) {
+                            record.q8Display =
+                                this.formatUSD(record.q8Formatted);
+                        }
 
-            this.stageOptions = [
-                ...new Set(this.previewData.map(r => r.stageName))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                        if (record.extendedFormatted != null) {
+                            record.extendedDisplay =
+                                this.formatUSD(record.extendedFormatted);
+                        }
 
-            this.businessUnitOptions = [
-                ...new Set(this.previewData.map(r => r.businessUnit))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                        return record;
 
-            this.ownerOptions = [
-                ...new Set(this.previewData.map(r => r.opportunityOwnerName))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                    })
+                    .sort((a, b) =>
+                        new Date(b.LastModifiedDate) -
+                        new Date(a.LastModifiedDate)
+                    );
 
-            this.geoOptions = [
-                ...new Set(this.previewData.map(r => r.location))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                this.filteredData = [...this.previewData];
 
-            this.bussinessTypeOptions = [
-                ...new Set(this.previewData.map(r => r.bussinessType))
-            ]
-                .filter(v => v)
-                .sort()
-                .map(v => ({ label: v, value: v }));
+                // KPI now receives numeric values
+                this.calculateKPIs(this.filteredData);
 
+                this.totalPages = Math.ceil(
+                    this.filteredData.length / this.pageSize
+                );
 
+                this.updatePagination();
 
-            this.isLoading = false;
+                console.table(this.paginatedData);
 
-        }).catch(error => {
+                // Filters
+                this.stageOptions = this.buildFilterOptions('StageName');
+                this.ownerOptions = this.buildFilterOptions('Owner.Name');
+                this.recordTypeNameOptions =
+                    this.buildFilterOptions('RecordType.Name');
+                this.businessUnitOptions =
+                    this.buildFilterOptions('Business_Unit_BU__c');
+                this.geoOptions =
+                    this.buildFilterOptions('Geo__c');
+                this.bussinessTypeOptions =
+                    this.buildFilterOptions('Business_Type__c');
 
-            this.isLoading = false;
+                this.isLoading = false;
 
-            this.showToast(
-                'Error',
-                error.body?.message || 'Unable to load preview data.',
-                'error'
-            );
+            })
+            .catch(error => {
 
-        });
+                this.isLoading = false;
+
+                this.showToast(
+                    'Error',
+                    error.body?.message || 'Unable to load preview data.',
+                    'error'
+                );
+
+            });
+    }
+
+    buildFilterOptions(fieldName) {
+
+        return [
+            ...new Set(this.previewData.map(r => r[fieldName]))
+        ]
+            .filter(Boolean)
+            .sort()
+            .map(v => ({
+                label: v,
+                value: v
+            }));
 
     }
+
+
 
     currencyFormatter = new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -1010,27 +1023,45 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
     updateColumns() {
 
-        this.columns = this.selectedFields
-            .map(fieldName => this.columnMap.get(fieldName))
-            .filter(Boolean);
+        this.columns = [];
+
+        this.selectedFields.forEach(field => {
+
+            const column = this.columnMap.get(field);
+
+            if (column) {
+
+                this.columns.push(column);
+
+            }
+
+        });
+
     }
 
-    selectedFields = [
-        'opportunityLink',
-        'stageName',
-        'bussinessType',
-        'tcvUSDFormatted',
-        'acvUSDFormatted',
-        'q1Formatted',
-        'q2Formatted',
-        'q3Formatted',
-        'q4Formatted',
-        'q5Formatted',
-        'q6Formatted',
-        'q7Formatted',
-        'q8Formatted',
-        'extendedFormatted'
-    ];
+    // updateColumns() {
+
+    //     this.columns = this.selectedFields
+    //         .map(fieldName => this.columnMap.get(fieldName))
+    //         .filter(Boolean);
+    // }
+
+    // selectedFields = [
+    //     'opportunityLink',
+    //     'stageName',
+    //     'bussinessType',
+    //     'tcvUSDFormatted',
+    //     'acvUSDFormatted',
+    //     'q1Formatted',
+    //     'q2Formatted',
+    //     'q3Formatted',
+    //     'q4Formatted',
+    //     'q5Formatted',
+    //     'q6Formatted',
+    //     'q7Formatted',
+    //     'q8Formatted',
+    //     'extendedFormatted'
+    // ];
 
     columnMap = new Map();
 
