@@ -90,7 +90,7 @@ global without sharing class NS_AccountAPI {
                                 SELECT Id, Name, BillingStreet, BillingCity,
                                 BillingState, BillingCountry,
                                 CurrencyIsoCode,
-                                Primary_Subsidiary__c,
+                                Primary_Subsidiary__c, Account_Group_Lookup__c, 
                                 Account_Group__c,Account_Status__c, Netsuite_ID__c
                                 FROM Account
                                 WHERE Id = :recordId AND Netsuite_ID__c = NULL
@@ -104,7 +104,7 @@ global without sharing class NS_AccountAPI {
                                 SELECT Id, Name, BillingStreet, BillingCity,
                                 BillingState, BillingCountry,
                                 CurrencyIsoCode,
-                                Primary_Subsidiary__c,
+                                Primary_Subsidiary__c, Account_Group_Lookup__c,
                                 Account_Group__c,Account_Status__c,Netsuite_ID__c
                                 FROM Account
                                 WHERE NS_Manual_Pull__c = true AND Netsuite_ID__c = NULL
@@ -234,6 +234,8 @@ global without sharing class NS_AccountAPI {
             //primaryCurrency = acc.CurrencyIsoCode;
             primarySubsidiary = acc.Primary_Subsidiary__c;
             customerAccountGroup = acc.Account_Group__c;
+            //Confirm this with Sudharshan
+            //accountGroup = acc.Account_Group_Lookup__c;
             accountStatus = acc.Account_Status__c;
             netSuiteCustomerId = acc.Netsuite_ID__c;
             // Primary Currency (From Opportunity Currency)

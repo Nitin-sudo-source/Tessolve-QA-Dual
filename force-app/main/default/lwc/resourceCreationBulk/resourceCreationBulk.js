@@ -26,15 +26,18 @@ export default class ResourceCreationBulk extends LightningElement {
     rateDebounceTimer;
     activeSections = [];
     activeTabValue = null;
+    @track currencyCode = 'INR';
 
     currencySymbols = {
-        INR: '₹',
-        USD: '$',
-        EUR: '€',
-        GBP: '£',
-        AUD: 'A$',
-        CAD: 'C$',
-        SGD: 'S$'
+        INR: '₹',   // Indian Rupee
+        USD: '$',   // US Dollar
+        EUR: '€',   // Euro
+        GBP: '£',   // British Pound
+        AUD: 'A$',  // Australian Dollar
+        CAD: 'C$',  // Canadian Dollar
+        SGD: 'S$',  // Singapore Dollar
+        JPY: '¥',   // Japanese Yen
+        MYR: 'RM'   // Malaysian Ringgit
     };
     @track otherCharges = {
         originalData: {
@@ -55,7 +58,7 @@ export default class ResourceCreationBulk extends LightningElement {
 
             region: '',
             regionGroup: '',
-            salesUnit: '',
+            salesUnit: 'Monthly',
 
             durationMonths: 0,
             durationMonthsCalculated: 0,
@@ -125,7 +128,7 @@ export default class ResourceCreationBulk extends LightningElement {
                 billingStartDate: '',
 
                 region: '',
-                salesUnit: '',
+                salesUnit: 'Monthly',
 
                 durationMonths: 0,
 
@@ -291,6 +294,7 @@ export default class ResourceCreationBulk extends LightningElement {
                     label: v.label,
                     value: v.value
                 }));
+
 
             this.statusOptions =
                 data.picklistFieldValues.Status__c.values.map(v => ({
@@ -1134,7 +1138,7 @@ export default class ResourceCreationBulk extends LightningElement {
             billingStartDate: rec.Billing_Start_Date__c || '',
 
             region: rec.Region__c || '',
-            salesUnit: rec.Sales_Unit__c || '',
+            salesUnit: rec.Sales_Unit__c || 'Monthly',
 
             durationMonths,
             durationMonthsCalculated: rec.Duration_Months_Calculated_c__c || 0,
@@ -1205,7 +1209,7 @@ export default class ResourceCreationBulk extends LightningElement {
             subBusinessUnitskills: firstRow.subBusinessUnitskills || '',
 
             region: firstRow.region || '',
-            salesUnit: firstRow.salesUnit || '',
+            salesUnit: firstRow.salesUnit || 'Monthly',
 
             currencyIsoCode: firstRow.currencyIsoCode || 'INR',
 
@@ -1620,7 +1624,7 @@ export default class ResourceCreationBulk extends LightningElement {
         // console.log('row.sellingRate: ' + JSON.stringify(row.sellingRate));
         // console.log('modifiedNonMsaRate: ' + JSON.stringify(modifiedNonMsaRate));
         row.projectedRevenue = safeResources * effectiveRate * safeDuration;
-
+        console.log('projectedRevenue: ' + JSON.stringify(row.projectedRevenue));
         row.formattedSellingRate = this.formatCurrency(row.sellingRate || 0, currency);
 
         row.formattedNonMSASellingRate = this.formatCurrency(modifiedNonMsaRate || 0, currency);
@@ -1667,7 +1671,7 @@ export default class ResourceCreationBulk extends LightningElement {
 
             region: '',
             regionGroup: '',
-            salesUnit: '',
+            salesUnit: 'Monthly',
 
             durationMonths: 0,
             durationMonthsCalculated: 0,
@@ -2429,7 +2433,7 @@ export default class ResourceCreationBulk extends LightningElement {
                     // ✅ store base values
                     row.msaRate = msaRate || wrap?.sellingRate;
                     row.nonMsaRate = nonMsaRate || wrap?.nonMSASellingRate;
-                    row.convertedUnits = wrap?.convertedUnits || 0;
+                    row.convertedUnits = wrap?.convertedUnits || row?.durationMonths || 0;
                     // if (wrap?.convertedUnits != null) {
                     //     row.convertedUnits = parseFloat(wrap?.convertedUnits).toFixed(2);
                     // }

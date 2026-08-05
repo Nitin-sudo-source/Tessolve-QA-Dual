@@ -57,7 +57,7 @@
                                 </div>
 
 
-                                <template for:each={otherCharges.modifiedDataInStringFormat.currencyTotals}
+                                <!-- <template for:each={otherCharges.modifiedDataInStringFormat.currencyTotals}
                                     for:item="item">
 
                                     <div key={item.currency} class="summary-card">
@@ -71,20 +71,10 @@
                                         </div>
 
 
-                                        <!-- <div class="summary-row">
-                                            <span class="summary-label">Total Selling Rate </span>
-                                            <span class="summary-value">{item.totalSellingRate}</span>
-                                        </div>
-                            
-                                       
-                                        <div class="summary-row">
-                                            <span class="summary-label">Avg Rate </span>
-                                            <span class="summary-value">{item.averageSellingRate}</span>
-                                        </div> -->
 
                                     </div>
 
-                                </template>
+                                </template> -->
 
                             </div>
 
@@ -203,7 +193,7 @@
 
                                                     </span>
                                                 </template>
-                                                <template if:true={row.formattedProjectedRevenue}>
+                                                <!-- <template if:true={row.formattedProjectedRevenue}> -->
                                                     <template if:true={row.projectedRevenue}>
                                                         <span class="rate-field">
 
@@ -217,7 +207,7 @@
 
                                                         </span>
                                                     </template>
-                                                </template>
+                                                <!-- </template> -->
 
                                                 <lightning-button-icon icon-name="utility:preview"
                                                     variant="border-filled" alternative-text="Quick View"
@@ -447,18 +437,19 @@
 
                                                     <!-- Sales Selling Rate -->
                                                     <template if:true={row.isNonMSA}>
-                                                        <template if:true={row.sellingRate}>
+                                                        <!-- <template if:true={row.sellingRate}> -->
                                                             <div class="form-field slds-form-element">
                                                                 <label class="slds-form-element__label">
                                                                 Sales Selling Rate
-                                                            <!-- <lightning-helptext content={helptext}>
+                                                            <lightning-helptext content="The entered value will automatically be converted into the Opportunity’s currency after Save.">
 
-                                                            </lightning-helptext> -->
+                                                            </lightning-helptext>
                                                                 </label>
 
                                                                 <div
                                                                     class="slds-input-has-icon slds-input-has-icon_left">
-                                                                    <span class="slds-input__icon slds-input__icon_left">{currencySymbol}</span>
+                                                                    <span class="slds-input__icon slds-input__icon_left">&nbsp;{row.currencyIsoCode}&nbsp;</span>
+                                                                    <!-- <span></span> -->
 
                                                                     <input class="slds-input currency-input"
                                                                         type="number"
@@ -472,7 +463,7 @@
                                                                         onchange={handleRowChangeInput}/>
                                                                 </div>
                                                             </div>
-                                                        </template>
+                                                        <!-- </template> -->
                                                     </template>
 
 
@@ -599,10 +590,10 @@
                                     <td>{quickView.region}</td>
                                 </tr>
 
-                                <tr>
+                                <!-- <tr>
                                     <th>Experience</th>
                                     <td>{quickView.experience} Years</td>
-                                </tr>
+                                </tr> -->
 
                                 <tr>
                                     <th>Resources</th>
@@ -611,7 +602,7 @@
 
                                 <tr>
                                     <th>Duration</th>
-                                    <td>{quickView.durationMonths} Months</td>
+                                    <td>{quickView.durationMonths}</td>
                                 </tr>
 
                                 <!-- <tr>

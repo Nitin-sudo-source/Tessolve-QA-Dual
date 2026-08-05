@@ -114,6 +114,7 @@ lastSyncDT = System.now().addDays(-1);
                     Lost_Description__c,
                     Customer_Contact__c,
                     Account.Name,
+                    Account.Account_Group_Lookup__c,
                     Account.Account_Group__c,
                     Total_Resource_Line_Item__c,
                     Resource_Skills_Set_Required__c,
@@ -156,6 +157,7 @@ lastSyncDT = System.now().addDays(-1);
                     Lost_Description__c,
                     Customer_Contact__c,
                     Account.Name,
+                    Account.Account_Group_Lookup__c,
                     Account.Account_Group__c,
                     Total_Resource_Line_Item__c,
                     Resource_Skills_Set_Required__c,
@@ -199,6 +201,7 @@ lastSyncDT = System.now().addDays(-1);
                     Lost_Description__c,
                     Customer_Contact__c,
                     Account.Name,
+                    Account.Account_Group_Lookup__c,
                     Account.Account_Group__c,
                     Total_Resource_Line_Item__c,
                     Resource_Skills_Set_Required__c,
@@ -348,6 +351,8 @@ lastSyncDT = System.now().addDays(-1);
             salesRep = opp.Owner.Name;
             purchaseOrderNumber = opp.PO_Number__c;
             accountGroup = opp.Account.Account_Group__c;
+            //Confirm this with Sudharshan
+            //accountGroup = opp.Account.Account_Group_Lookup__c;
             businessUnit = opp.Business_Unit_BU__c;
             subBusinessUnit = opp.Sub_Business_Unit__c;
             opportunityRecordType = opp.RecordType != null ? opp.RecordType.Name: null;
