@@ -105,7 +105,7 @@
 
                                                         <span class="field-label">BU Details:</span>
                                                         <span class="field-value">
-                                                            {row.businessUnit}
+                                                            {row.parentskillbusinessUnit}
                                                         </span>
                                                         <!-- <span class="separator">›</span>
                                                         {row.subBusinessUnit}
@@ -250,9 +250,9 @@
                                                     </lightning-combobox>
 
                                                     <!-- Business Unit -->
-                                                    <lightning-combobox label="Business Unit" value={row.businessUnit}
-                                                        options={businessUnitOptions} data-id={row.id}
-                                                        data-field="businessUnit" data-index={index}
+                                                    <lightning-combobox label="Sub Skills"  value={row.parentskillbusinessUnit}
+                                                        options={parentSkillbusinessUnitOptions} data-id={row.id}
+                                                        data-field="parentskillbusinessUnit" data-index={index}
                                                         onchange={handleBusinessUnitChange} disabled={row.isEditable}
                                                         required>
                                                     </lightning-combobox>
@@ -265,11 +265,11 @@
                                                     </lightning-combobox>
 
                                                     <!-- Sub Skills -->
-                                                    <template if:true={row.subBUSkillsOptions}>
-                                                        <lightning-combobox label="Sub Skills"
-                                                            value={row.subBusinessUnitskills}
-                                                            options={row.subBUSkillsOptions} data-id={row.id}
-                                                            data-field="subBusinessUnitskills" data-index={index}
+                                                    <template if:true={row.childBUSkillsOptions}>
+                                                        <lightning-combobox label="Business Unit"
+                                                            value={row.childBusinessUnitskills}
+                                                            options={row.childBUSkillsOptions} data-id={row.id}
+                                                            data-field="childBusinessUnitskills" data-index={index}
                                                             onchange={handleRowChange} disabled={row.isEditable}
                                                             required>
                                                         </lightning-combobox>
@@ -448,7 +448,7 @@
 
                                                                 <div
                                                                     class="slds-input-has-icon slds-input-has-icon_left">
-                                                                    <span class="slds-input__icon slds-input__icon_left">&nbsp;{row.currencyIsoCode}&nbsp;</span>
+                                                                    <span class="slds-input__icon currency-prefixslds-input__icon_left">&nbsp;{row.currencyIsoCode}&nbsp;</span>
                                                                     <!-- <span></span> -->
 
                                                                     <input class="slds-input currency-input"
@@ -572,7 +572,7 @@
 
                                 <tr>
                                     <th>Business Unit</th>
-                                    <td>{quickView.businessUnit}</td>
+                                    <td>{quickView.childBusinessUnitskills}</td>
                                 </tr>
 
                                 <tr>
@@ -582,7 +582,7 @@
 
                                 <tr>
                                     <th>Skill</th>
-                                    <td>{quickView.subBusinessUnitskills}</td>
+                                    <td>{quickView.parentskillbusinessUnit}</td>
                                 </tr>
 
                                 <tr>

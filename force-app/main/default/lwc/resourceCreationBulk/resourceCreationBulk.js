@@ -44,9 +44,9 @@ export default class ResourceCreationBulk extends LightningElement {
             id: 'recordTypeID',
             sequenceNo: 0,
 
-            businessUnit: '',
+            parentskillbusinessUnit: '',
             subBusinessUnit: '',
-            subBusinessUnitskills: '',
+            childBusinessUnitskills: '',
             category: '',
             skillFunctionalArea: '',
             experience: '',
@@ -115,9 +115,9 @@ export default class ResourceCreationBulk extends LightningElement {
 
         newchargesData: [
             {
-                businessUnit: '',
+                parentskillbusinessUnit: '',
                 subBusinessUnit: '',
-                subBusinessUnitskills: '',
+                childBusinessUnitskills: '',
                 category: '',
                 skillFunctionalArea: '',
                 experience: '',
@@ -154,7 +154,7 @@ export default class ResourceCreationBulk extends LightningElement {
         metadata: {
             businessUnits: [],
             subBusinessUnits: [],
-            subBusinessUnitskills: [],
+            childBusinessUnitskills: [],
             categories: [],
             skillFunctionalAreas: [],
             experiences: [],
@@ -165,7 +165,7 @@ export default class ResourceCreationBulk extends LightningElement {
 
     };
 
-    businessUnitOptions = [];
+    parentSkillbusinessUnitOptions = [];
     categoryOptions = [];
     experienceOptions = [];
     regionsOptions = [];
@@ -174,7 +174,7 @@ export default class ResourceCreationBulk extends LightningElement {
     statusOptions = [];
 
     subBUValues;
-    subBUSkillsValues;
+    childBUValues;
     skillValues;
     @track oppDefaults;
     modalInitialized = false;
@@ -254,8 +254,8 @@ export default class ResourceCreationBulk extends LightningElement {
         if (data) {
 
             // Business Unit
-            this.businessUnitOptions =
-                data.picklistFieldValues.Business_Unit__c.values.map(v => ({
+            this.parentSkillbusinessUnitOptions =
+                data.picklistFieldValues.Sub_Skills__c.values.map(v => ({
                     label: v.label,
                     value: v.value
                 }));
@@ -304,7 +304,7 @@ export default class ResourceCreationBulk extends LightningElement {
 
             // Dependent metadata
             this.subBUValues = data.picklistFieldValues.Sub_Business_Unit__c;
-            this.subBUSkillsValues = data.picklistFieldValues.Sub_Skills__c;
+            this.childBUValues = data.picklistFieldValues.Business_Unit__c;
             this.skillValues = data.picklistFieldValues.Skill_Functional_Area__c;
 
         }
@@ -364,21 +364,30 @@ export default class ResourceCreationBulk extends LightningElement {
         const value = event.detail.value;
 
         const rowIndex =
-            this.otherCharges.newchargesData.findIndex(r => r.id === rowId);
+            this.otherCharges.newchargesData.findIndex(
+                r => r.id === rowId
+            );
 
-        const row = this.otherCharges.newchargesData[rowIndex];
+        const row =
+            this.otherCharges.newchargesData[rowIndex];
 
-        // Set Business Unit
-        row.businessUnit = value;
+        // Parent Business Unit
+        row.parentskillbusinessUnit = value;
 
         // Reset children
         row.subBusinessUnit = null;
-        row.subBusinessUnitskills = null;
-        row.subBUSkillsOptions = [];
+        row.childBusinessUnitskills = null;
 
-        // Load Sub Business Unit options
+        row.subBUOptions = [];
+        row.childBUSkillsOptions = [];
+
+        //==========================
+        // Business Unit -> Sub BU
+        //==========================
         if (value && this.subBUValues) {
-            const controllingKey = this.subBUValues.controllerValues[value];
+
+            const controllingKey =
+                this.subBUValues.controllerValues[value];
 
             row.subBUOptions =
                 this.subBUValues.values
@@ -387,12 +396,61 @@ export default class ResourceCreationBulk extends LightningElement {
                         label: opt.label,
                         value: opt.value
                     }));
-        } else {
-            row.subBUOptions = [];
+
+            // Auto Select Sub BU
+            if (row.subBUOptions.length === 1) {
+
+                row.subBusinessUnit =
+                    row.subBUOptions[0].value;
+
+            }
+
         }
 
-        this.otherCharges.newchargesData = [...this.otherCharges.newchargesData];
-        this.handlecalculateValues();
+        //==========================
+        // Sub BU -> Child Skills
+        //==========================
+        if (row.subBusinessUnit && this.childBUValues) {
+
+            const controllingSkillsKey =
+                this.childBUValues.controllerValues[
+                row.subBusinessUnit
+                ];
+
+            row.childBUSkillsOptions =
+                this.childBUValues.values
+                    .filter(opt => opt.validFor.includes(controllingSkillsKey))
+                    .map(opt => ({
+                        label: opt.label,
+                        value: opt.value
+                    }));
+
+            // Auto Select Child Skill
+            if (row.childBUSkillsOptions.length === 1) {
+
+                row.childBusinessUnitskills =
+                    row.childBUSkillsOptions[0].value;
+
+            }
+
+        }
+
+        this.otherCharges.newchargesData = [
+            ...this.otherCharges.newchargesData
+        ];
+
+        console.log(
+            'Updated Row:',
+            JSON.stringify(row, null, 2)
+        );
+
+        this.fetchSkillOptions(rowId, '');
+        this.fetchExperienceOptions(rowId, '');
+
+        //this.handlecalculateValues();
+        Promise.resolve().then(() => {
+            this.handlecalculateValues();
+        });
     }
 
     handleSubBUChange(event) {
@@ -401,36 +459,67 @@ export default class ResourceCreationBulk extends LightningElement {
         const value = event.detail.value;
 
         const rowIndex =
-            this.otherCharges.newchargesData.findIndex(r => r.id === rowId);
+            this.otherCharges.newchargesData.findIndex(
+                r => r.id === rowId
+            );
 
-        const row = this.otherCharges.newchargesData[rowIndex];
+        const row =
+            this.otherCharges.newchargesData[rowIndex];
 
         // Set Sub Business Unit
         row.subBusinessUnit = value;
 
-        // Reset Skills
-        row.subBusinessUnitskills = null;
-        row.subBUSkillsOptions = [];
+        // Reset Child Skill
+        row.childBusinessUnitskills = null;
+        row.childBUSkillsOptions = [];
 
-        if (value && this.subBUSkillsValues) {
+        //==========================
+        // Sub BU -> Child Skills
+        //==========================
+        if (value && this.childBUValues) {
 
             const controllingSkillsKey =
-                this.subBUSkillsValues.controllerValues[value];
+                this.childBUValues.controllerValues[value];
 
-            row.subBUSkillsOptions =
-                this.subBUSkillsValues.values
+            row.childBUSkillsOptions =
+                this.childBUValues.values
                     .filter(opt => opt.validFor.includes(controllingSkillsKey))
                     .map(opt => ({
                         label: opt.label,
                         value: opt.value
                     }));
+
+            // Auto Select Child Skill
+            if (row.childBUSkillsOptions.length === 1) {
+
+                row.childBusinessUnitskills =
+                    row.childBUSkillsOptions[0].value;
+
+            }
+
         }
 
-        this.otherCharges.newchargesData = [...this.otherCharges.newchargesData];
-        this.handlecalculateValues();
+
+
+        this.otherCharges.newchargesData = [
+            ...this.otherCharges.newchargesData
+        ];
+
+        console.log(
+            'Updated Row:',
+            JSON.stringify(row, null, 2)
+        );
+
+        this.fetchSkillOptions(rowId, '');
+        this.fetchExperienceOptions(rowId, '');
+
+        Promise.resolve().then(() => {
+            this.handlecalculateValues();
+        });
     }
 
     fetchSkillOptions(rowId, searchKey) {
+        // alert('rowId: ' + JSON.stringify((rowId)));
 
         console.log('ROW RECEIVED:', JSON.stringify(rowId));
         const rows = [...this.otherCharges.newchargesData];
@@ -455,9 +544,9 @@ export default class ResourceCreationBulk extends LightningElement {
         fetchSkillCategoryMatrix({
             searchKey: searchKey,
             projectId: this.getProjectId,
-            bu: row.businessUnit,
+            bu: row.childBusinessUnitskills,
             subBu: row.subBusinessUnit,
-            subSkills: row.subBusinessUnitskills,
+            subSkills: row.parentskillbusinessUnit,
             region: row.region,
             msaType: row.isMSA ? 'MSA' : 'Non MSA'
         })
@@ -522,9 +611,9 @@ export default class ResourceCreationBulk extends LightningElement {
         fetchExperienceOptions({
             searchKey: searchKey,
             projectId: this.getProjectId,
-            bu: row.businessUnit,
+            bu: row.childBusinessUnitskills,
             subBu: row.subBusinessUnit,
-            subSkills: row.subBusinessUnitskills,
+            subSkills: row.parentskillbusinessUnit,
             region: row.region,
             msaType: row.isMSA ? 'MSA' : 'Non MSA'
         })
@@ -605,7 +694,9 @@ export default class ResourceCreationBulk extends LightningElement {
         console.log('Selected Value:', selectedValue);
         console.log('Selected Label:', selectedOption?.label);
 
-        this.refreshData();
+
+
+        //this.refreshData();
         this.handlecalculateValues();
         console.log('Full Row:', JSON.stringify(this.otherCharges.newchargesData[index]));
     }
@@ -628,15 +719,16 @@ export default class ResourceCreationBulk extends LightningElement {
         console.log('Selected Value:', selectedValue);
         console.log('Selected Label:', selectedOption?.label);
 
-        this.refreshData();
+
+        //this.refreshData();
         this.handlecalculateValues();
         console.log('Full Row:', JSON.stringify(this.otherCharges.newchargesData[index]));
     }
 
 
-    refreshData() {
-        this.otherCharges.newchargesData = [...this.otherCharges.newchargesData];
-    }
+    // refreshData() {
+    //     this.otherCharges.newchargesData = [...this.otherCharges.newchargesData];
+    // }
 
 
     handleRowChange(event) {
@@ -668,9 +760,9 @@ export default class ResourceCreationBulk extends LightningElement {
             // MSA toggle reset
             // if (field === 'isMSA') {
             // updatedRow.region = null;
-            // updatedRow.businessUnit = null;
+            // updatedRow.parentskillbusinessUnit = null;
             // updatedRow.subBusinessUnit = null;
-            // updatedRow.subBusinessUnitskills = null;
+            // updatedRow.childBusinessUnitskills = null;
 
             //     updatedRow.skillCategoryMatrixId = null;
             //     updatedRow.skillCategoryMatrixName = '';
@@ -678,7 +770,7 @@ export default class ResourceCreationBulk extends LightningElement {
             // }
 
             // ✅ mark for fetch AFTER update
-            if (field === 'region' || field === 'subBusinessUnitskills' || field === 'subBusinessUnitskills' || field === 'isMSA') {
+            if (field === 'region' || field === 'childBusinessUnitskills' || field === 'childBusinessUnitskills' || field === 'isMSA') {
                 shouldFetch = true;
                 updatedRow.isRecalculation = true;
 
@@ -1001,9 +1093,9 @@ export default class ResourceCreationBulk extends LightningElement {
     buildAccordionHeader(row) {
 
         const seq = row.sequenceNo || '-';
-        const bu = row.businessUnit || '-';
+        const bu = row.parentskillbusinessUnit || '-';
         const subBU = row.subBusinessUnit || '-';
-        const subSkills = row.subBusinessUnitskills || '-';
+        const subSkills = row.childBusinessUnitskills || '-';
 
         const exp = row.experience ? row.experience + 'Y' : '-';
         const res = row.numberOfResources || '-';
@@ -1104,7 +1196,11 @@ export default class ResourceCreationBulk extends LightningElement {
         const durationMonths = rec.Duration_Months__c || 0;
         const durationMonthsCalculated = rec.Duration_Months_Calculated_c__c || 0;
         const convertedUnits = Number(wrapper?.convertedUnits) || 0;
-        const margin = (rec.Sales_Selling_Rate__c ?? 0) - (rec.Selling_Rate__c ?? 0);
+        // const margin = (rec.Sales_Selling_Rate__c ?? 0) - (rec.Selling_Rate__c ?? 0);
+        const margin =
+            rec.Sales_Selling_Rate__c
+                ? rec.Sales_Selling_Rate__c - (rec.Selling_Rate__c ?? 0)
+                : 0;
 
         const projectedRevenue = numberOfResources * sellingRate * convertedUnits;
 
@@ -1121,9 +1217,9 @@ export default class ResourceCreationBulk extends LightningElement {
             id: rec.Id ? rec.Id : 'temp_' + index,
             recordExists: wrapper?.recordExists || false,
 
-            businessUnit: rec.Business_Unit__c || '',
+            parentskillbusinessUnit: rec.Sub_Skills__c || '',
             subBusinessUnit: rec.Sub_Business_Unit__c || '',
-            subBusinessUnitskills: rec.Sub_Skills__c || '',
+            childBusinessUnitskills: rec.Business_Unit__c || '',
 
             // category: rec.Category__c || '',
             // skillFunctionalArea: rec.Skill_Functional_Area__c || '',
@@ -1182,7 +1278,7 @@ export default class ResourceCreationBulk extends LightningElement {
                 rec.Related_Opportunity__c || this.recordId,
 
             subBUOptions: [],
-            subBUSkillsOptions: [],
+            childBUSkillsOptions: [],
             skillOptions: [],
             isDropdownOpen: false,
             isLoading: false,
@@ -1204,9 +1300,9 @@ export default class ResourceCreationBulk extends LightningElement {
 
         this.oppDefaults = {
 
-            businessUnit: firstRow.businessUnit || '',
+            parentskillbusinessUnit: firstRow.parentskillbusinessUnit || '',
             subBusinessUnit: firstRow.subBusinessUnit || '',
-            subBusinessUnitskills: firstRow.subBusinessUnitskills || '',
+            childBusinessUnitskills: firstRow.childBusinessUnitskills || '',
 
             region: firstRow.region || '',
             salesUnit: firstRow.salesUnit || 'Monthly',
@@ -1226,207 +1322,6 @@ export default class ResourceCreationBulk extends LightningElement {
         };
     }
 
-    // getMasterDetailsCall() {
-
-    //     getMasterDetails({ opportunityId: this.recordId })
-    //         .then(result => {
-
-    //             this.otherCharges.originalData = {};
-    //             this.otherCharges.newchargesData = [];
-
-    //             console.log('RLI result:' + JSON.stringify(result));
-
-    //             if (result?.length) {
-
-    //                 result.forEach((wrapper, index) => {
-
-    //                     const row = this.createRow(wrapper, index);
-
-    //                     // ✅ Ensure currency always present
-    //                     const currency = row.currencyIsoCode || 'INR';
-
-    //                     // 🔹 Calculate projected revenue
-    //                     // const resources = parseFloat(row.numberOfResources) || 0;
-    //                     // const rate = parseFloat(row.sellingRate) || 0;
-    //                     // const nonmsarat = parseFloat(row.nonMSASellingRate) || 0;
-    //                     // const duration = parseFloat(row.durationMonths) || 0;
-
-    //                     // row.projectedRevenue = resources * rate * duration;
-
-    //                     const resources = parseFloat(row.numberOfResources) || 0;
-    //                     const msaRate = parseFloat(row.sellingRate) || 0;
-    //                     const nonMsaRate = parseFloat(row.nonMSASellingRate) || 0;
-    //                     const duration = parseFloat(row.durationMonths) || 0;
-
-    //                     // ✅ Ensure flags
-    //                     row.isNonMSA = !row.isMSA;
-
-    //                     // =========================
-    //                     // BUSINESS LOGIC
-    //                     // =========================
-    //                     if (row.isMSA) {
-
-    //                         row.sellingRate = msaRate;
-    //                         row.nonMSASellingRate = 0;
-    //                         row.margin = 0;
-
-    //                     } else {
-
-    //                         row.sellingRate = msaRate; // reference only
-    //                         row.nonMSASellingRate = nonMsaRate;
-
-    //                         row.margin = (msaRate || 0) - (nonMsaRate || 0);
-    //                     }
-
-    //                     // =========================
-    //                     // PROJECTED REVENUE
-    //                     // =========================
-    //                     const effectiveRate = row.isMSA
-    //                         ? (row.sellingRate || 0)
-    //                         : (row.nonMSASellingRate || 0);
-
-    //                     row.projectedRevenue = resources * effectiveRate * duration;
-
-    //                     // 🔹 Format values (clean)
-    //                     row.formattedSellingRate =
-    //                         this.formatCurrency(msaRate, currency);
-
-    //                     row.formattedMargin =
-    //                         this.formatCurrency(row.margin || 0, currency);
-
-    //                     row.formattedNonMSASellingRate =
-    //                         this.formatCurrency(nonMsaRate, currency);
-
-    //                     row.formattedProjectedRevenue =
-    //                         this.formatCurrency(row.projectedRevenue, currency);
-
-    //                     /* -------- Business Unit → Sub BU dependency -------- */
-
-    //                     if (row.businessUnit && this.subBUValues && this.subBUSkillsValues) {
-
-    //                         const controllingKey =
-    //                             this.subBUValues.controllerValues[row.businessUnit];
-
-    //                         row.subBUOptions =
-    //                             this.subBUValues.values
-    //                                 .filter(opt => opt.validFor.includes(controllingKey))
-    //                                 .map(opt => ({
-    //                                     label: opt.label,
-    //                                     value: opt.value
-    //                                 }));
-
-    //                         if (row.subBusinessUnit) {
-
-    //                             const controllingSkillsKey =
-    //                                 this.subBUSkillsValues.controllerValues[row.subBusinessUnit];
-
-    //                             row.subBUSkillsOptions =
-    //                                 this.subBUSkillsValues.values
-    //                                     .filter(opt => opt.validFor.includes(controllingSkillsKey))
-    //                                     .map(opt => ({
-    //                                         label: opt.label,
-    //                                         value: opt.value
-    //                                     }));
-    //                         }
-    //                     }
-
-    //                     // 🔥 Inject selected Skill into options
-    //                     if (row.skillCategoryMatrixId && row.skillCategoryMatrixName) {
-    //                         row.skillOptions = [
-    //                             {
-    //                                 label: row.skillCategoryMatrixName,
-    //                                 value: row.skillCategoryMatrixId
-    //                             }
-    //                         ];
-    //                     }
-
-    //                     // 🔥 Inject selected Experience into options
-    //                     if (row.experienceId && row.experienceName) {
-    //                         row.experienceOptions = [
-    //                             {
-    //                                 label: row.experienceName,
-    //                                 value: row.experienceId
-    //                             }
-    //                         ];
-    //                     }
-
-
-    //                     row.headerLabel = this.buildAccordionHeader(row);
-
-    //                     this.otherCharges.originalData[row.id] = row;
-    //                     this.otherCharges.newchargesData.push({ ...row });
-
-    //                 });
-
-    //             } else {
-
-    //                 const row = this.createRow({}, 0);
-
-    //                 const currency = row.currencyIsoCode || 'INR';
-
-    //                 const msaRate = parseFloat(row.sellingRate) || 0;
-    //                 const nonMsaRate = parseFloat(row.nonMSASellingRate) || 0;
-
-    //                 row.isNonMSA = !row.isMSA;
-
-    //                 if (row.isMSA) {
-    //                     row.margin = 0;
-    //                 } else {
-    //                     row.margin = (msaRate || 0) - (nonMsaRate || 0);
-    //                 }
-
-    //                 const effectiveRate = row.isMSA ? msaRate : nonMsaRate;
-
-    //                 row.projectedRevenue =
-    //                     (parseFloat(row.numberOfResources) || 0) *
-    //                     effectiveRate *
-    //                     (parseFloat(row.durationMonths) || 0);
-
-    //                 row.formattedMargin =
-    //                     this.formatCurrency(row.margin || 0, currency);
-
-    //                 row.formattedSellingRate =
-    //                     this.formatCurrency(row.sellingRate, currency);
-
-    //                 row.formattedNonMSASellingRate =
-    //                     this.formatCurrency(row.nonMSASellingRate, currency);
-
-    //                 row.formattedProjectedRevenue =
-    //                     this.formatCurrency(row.projectedRevenue, currency);
-
-    //                 this.otherCharges.originalData[row.id] = row;
-    //                 this.otherCharges.newchargesData.push({ ...row });
-    //             }
-
-    //             /* ---- Open first section ---- */
-
-    //             if (this.otherCharges.newchargesData.length > 0) {
-
-    //                 const firstRowId = this.otherCharges.newchargesData[0].id;
-
-    //                 setTimeout(() => {
-    //                     if (!this.otherCharges.newchargesData[0].recordExists) {
-    //                         this.openSectionById(firstRowId);
-    //                     }
-    //                 }, 0);
-    //             }
-
-    //             /* ---- Opportunity Defaults ---- */
-
-    //             this.setOpportunityDefaults();
-    //             this.showSpinner = false;
-    //             this.handlecalculateValues();
-
-    //         })
-    //         .catch(error => {
-
-    //             console.error('getMasterDetails Error:' + this.parseError(error));
-    //             const errorMessage = this.parseError(error);
-    //             this.showErrorToast('Error', errorMessage);
-    //             this.showSpinner = false;
-
-    //         });
-    // }
 
     getMasterDetailsCall() {
 
@@ -1461,10 +1356,10 @@ export default class ResourceCreationBulk extends LightningElement {
 
                         /* -------- Business Unit → Sub BU dependency -------- */
 
-                        if (row.businessUnit && this.subBUValues && this.subBUSkillsValues) {
+                        if (row.parentskillbusinessUnit && this.subBUValues && this.childBUValues) {
 
                             const controllingKey =
-                                this.subBUValues.controllerValues[row.businessUnit];
+                                this.subBUValues.controllerValues[row.parentskillbusinessUnit];
 
                             row.subBUOptions =
                                 this.subBUValues.values
@@ -1477,10 +1372,10 @@ export default class ResourceCreationBulk extends LightningElement {
                             if (row.subBusinessUnit) {
 
                                 const controllingSkillsKey =
-                                    this.subBUSkillsValues.controllerValues[row.subBusinessUnit];
+                                    this.childBUValues.controllerValues[row.subBusinessUnit];
 
-                                row.subBUSkillsOptions =
-                                    this.subBUSkillsValues.values
+                                row.childBUSkillsOptions =
+                                    this.childBUValues.values
                                         .filter(opt => opt.validFor.includes(controllingSkillsKey))
                                         .map(opt => ({
                                             label: opt.label,
@@ -1605,15 +1500,27 @@ export default class ResourceCreationBulk extends LightningElement {
 
         } else if (row.isNonMSA && row.recordExists) {
             //row.sellingRate = row?.nonMSASellingRate || 0;
-            const margin = modifiedNonMsaRate - originalSellingRate;
-            row.margin = margin ? margin : 0;
+            // const margin = modifiedNonMsaRate - originalSellingRate;
+            // row.margin = margin ? margin : 0;
+            const margin =
+                row.nonMSASellingRate != null
+                    ? modifiedNonMsaRate - originalSellingRate
+                    : 0;
+
+            row.margin = margin;
             row.sellingRate = row.msaRate;
             effectiveRate = modifiedNonMsaRate || row.msaRate || row.sellingRate;
         } else if (row.isNonMSA && row.recordExists === false) {
             console.log('insidenonmsa: ' + JSON.stringify(row.nonMsaRate));
             row.sellingRate = row.nonMsaRate || 0;
-            const margin = (modifiedNonMsaRate - originalSellingRate) || 0;
-            row.margin = margin != null ? margin : 0;
+            // const margin = (modifiedNonMsaRate - originalSellingRate) || 0;
+            // row.margin = margin != null ? margin : 0;
+            const margin =
+                row.nonMsaRate != null
+                    ? modifiedNonMsaRate - row.nonMsaRate
+                    : 0;
+
+            row.margin = margin;
             if (modifiedNonMsaRate > 0) {
                 effectiveRate = modifiedNonMsaRate;
             } else {
@@ -1654,9 +1561,9 @@ export default class ResourceCreationBulk extends LightningElement {
             sequenceNo: rows.length + 1,
             recordExists: false,
 
-            businessUnit: lastRow.businessUnit || this.oppDefaults?.businessUnit || '',
+            parentskillbusinessUnit: lastRow.parentskillbusinessUnit || this.oppDefaults?.parentskillbusinessUnit || '',
             subBusinessUnit: lastRow.subBusinessUnit || this.oppDefaults?.subBusinessUnit || '',
-            subBusinessUnitskills: lastRow.subBusinessUnitskills || this.oppDefaults?.subBusinessUnitskills || '',
+            childBusinessUnitskills: lastRow.childBusinessUnitskills || this.oppDefaults?.childBusinessUnitskills || '',
 
             category: '',
             skillFunctionalArea: '',
@@ -1698,7 +1605,7 @@ export default class ResourceCreationBulk extends LightningElement {
             relatedOpportunityId: this.recordId,
 
             subBUOptions: [],
-            subBUSkillsOptions: [],
+            childBUSkillsOptions: [],
             skillOptions: [],
             isDropdownOpen: false,
             isLoading: false,
@@ -1710,10 +1617,10 @@ export default class ResourceCreationBulk extends LightningElement {
 
         /* ---------- Business Unit → Sub BU ---------- */
 
-        if (newRow.businessUnit && this.subBUValues) {
+        if (newRow.parentskillbusinessUnit && this.subBUValues) {
 
             const controllingKey =
-                this.subBUValues.controllerValues[newRow.businessUnit];
+                this.subBUValues.controllerValues[newRow.parentskillbusinessUnit];
 
             newRow.subBUOptions = this.subBUValues.values
                 .filter(opt => opt.validFor.includes(controllingKey))
@@ -1725,12 +1632,12 @@ export default class ResourceCreationBulk extends LightningElement {
 
         /* ---------- Sub BU → Sub BU Skills ---------- */
 
-        if (newRow.subBusinessUnit && this.subBUSkillsValues) {
+        if (newRow.subBusinessUnit && this.childBUValues) {
 
             const controllingKey =
-                this.subBUSkillsValues.controllerValues[newRow.subBusinessUnit];
+                this.childBUValues.controllerValues[newRow.subBusinessUnit];
 
-            newRow.subBUSkillsOptions = this.subBUSkillsValues.values
+            newRow.childBUSkillsOptions = this.childBUValues.values
                 .filter(opt => opt.validFor.includes(controllingKey))
                 .map(opt => ({
                     label: opt.label,
@@ -1769,57 +1676,6 @@ export default class ResourceCreationBulk extends LightningElement {
 
         //this.showCalculate = true;
     }
-
-    // handleRemoveRow(event) {
-    //     event.stopPropagation();
-
-    //     const rowId = event.currentTarget.dataset.id;
-
-    //     const currentIndex = this.otherCharges.newchargesData.findIndex(
-    //         row => row.id === rowId
-    //     );
-
-    //     if (currentIndex === -1) {
-    //         return;
-    //     }
-
-    //     // remove row
-    //     this.otherCharges.newchargesData.splice(currentIndex, 1);
-
-    //     // reset sequence numbers
-    //     this.otherCharges.newchargesData = this.otherCharges.newchargesData.map((row, index) => {
-    //         return {
-    //             ...row,
-    //             sequenceNo: index + 1
-    //         };
-    //     });
-
-    //     // reset active tab
-    //     if (this.otherCharges.newchargesData.length > 0) {
-
-    //         const newIndex =
-    //             currentIndex > 0 ? currentIndex - 1 : 0;
-
-    //         this.activeTabValue =
-    //             this.otherCharges.newchargesData[newIndex].id;
-
-    //     } else {
-    //         this.activeTabValue = null;
-    //     }
-
-    //     this.otherCharges.newchargesData = [
-    //         ...this.otherCharges.newchargesData
-    //     ];
-
-    //     // //console.log(
-    //     //     'After Remove:',
-    //     //     JSON.stringify(this.otherCharges.newchargesData)
-    //     // );
-
-    //     this.handlecalculateValues();
-    //     //this.showCalculate = true;
-    // }
-
 
     handleRemoveRow(event) {
         event.stopPropagation();
@@ -1914,354 +1770,6 @@ export default class ResourceCreationBulk extends LightningElement {
         return this.otherCharges.modifiedDataInStringFormat.currencyTotals || [];
     }
 
-    // handlecalculateValues() {
-
-    //     let totalResources = 0;
-
-    //     const currencyTotals = {};
-
-    //     // 🔵 Insight Maps
-    //     let regionMap = {};
-    //     let experienceMap = {};
-    //     let buMap = {};
-    //     let subBuMap = {};
-    //     let skillMap = {};
-    //     let typeMap = {};
-
-    //     const modifiedRows = this.otherCharges.newchargesData.map((item, index) => {
-
-    //         const resources = parseFloat(item.numberOfResources) || 0;
-    //         const sellingRate = parseFloat(item.sellingRate) || 0;
-    //         const nonMSASellingRate = parseFloat(item.nonMSASellingRate) || 0;
-    //         const duration = parseFloat(item.durationMonths) || 0;
-
-    //         const currency = item.currencyIsoCode || 'INR';
-
-    //         const projectedRevenue = resources * sellingRate * duration;
-
-    //         totalResources += resources;
-
-    //         // 🔹 Currency grouping
-    //         if (!currencyTotals[currency]) {
-    //             currencyTotals[currency] = {
-    //                 totalSellingRate: 0,
-    //                 totalProjectedRevenue: 0,
-    //                 rowCount: 0
-    //             };
-    //         }
-    //         if (resources > 0) {
-    //             currencyTotals[currency].totalSellingRate += sellingRate;
-    //             currencyTotals[currency].totalProjectedRevenue += projectedRevenue;
-    //             currencyTotals[currency].rowCount++;
-    //         }
-
-    //         // 🔵 Insight Data
-    //         if (item.region) {
-    //             regionMap[item.region] = (regionMap[item.region] || 0) + resources;
-    //         }
-
-    //         if (item.experience) {
-    //             experienceMap[item.experience] = (experienceMap[item.experience] || 0) + resources;
-    //         }
-
-    //         if (item.businessUnit) {
-    //             buMap[item.businessUnit] = (buMap[item.businessUnit] || 0) + resources;
-    //         }
-
-    //         if (item.subBusinessUnit) {
-    //             subBuMap[item.subBusinessUnit] = (subBuMap[item.subBusinessUnit] || 0) + resources;
-    //         }
-
-    //         const updatedRow = {
-    //             ...item,
-    //             sequenceNo: index + 1,
-    //             projectedRevenue,
-
-    //             formattedSellingRate:
-    //                 this.formatCurrency(sellingRate, currency),
-
-    //             formattedNonMSASellingRate:
-    //                 this.formatCurrency(nonMSASellingRate || 0, currency),
-
-    //             formattedProjectedRevenue:
-    //                 this.formatCurrency(projectedRevenue, currency)
-    //         };
-
-    //         updatedRow.headerLabel = this.buildAccordionHeader(updatedRow);
-
-    //         return updatedRow;
-
-    //     });
-
-    //     // 🔹 Convert currency totals
-    //     const formattedCurrencyTotals = Object.keys(currencyTotals).map(curr => {
-
-    //         const bucket = currencyTotals[curr];
-
-    //         const avg =
-    //             bucket.rowCount > 0
-    //                 ? bucket.totalSellingRate / bucket.rowCount
-    //                 : 0;
-
-    //         return {
-    //             currency: curr,
-    //             totalSellingRate:
-    //                 this.formatCurrency(bucket.totalSellingRate, curr),
-
-    //             totalProjectedRevenue:
-    //                 this.formatCurrency(bucket.totalProjectedRevenue, curr),
-
-    //             averageSellingRate:
-    //                 this.formatCurrency(avg, curr)
-    //         };
-
-    //     });
-
-    //     // 🔹 Single currency fallback (for your existing UI)
-    //     const firstCurrency = Object.keys(currencyTotals)[0] || 'INR';
-    //     const firstBucket = currencyTotals[firstCurrency] || {
-    //         totalSellingRate: 0,
-    //         totalProjectedRevenue: 0,
-    //         rowCount: 0
-    //     };
-
-    //     const avgSellingRate =
-    //         firstBucket.rowCount > 0
-    //             ? firstBucket.totalSellingRate / firstBucket.rowCount
-    //             : 0;
-
-    //     // 🔵 RAW DATA
-    //     this.otherCharges.modifiedData = {
-    //         rows: modifiedRows,
-
-    //         totalResources,
-    //         currencyTotals,
-
-    //         regionSummary: regionMap,
-    //         experienceSummary: experienceMap,
-    //         buSummary: buMap,
-    //         subBuSummary: subBuMap,
-    //         skillSummary: skillMap,
-    //         typeSummary: typeMap,
-
-    //         opportunityId: this.recordId
-    //     };
-
-    //     // 🔵 STRING FORMAT FOR UI
-    //     this.otherCharges.modifiedDataInStringFormat = {
-    //         rows: modifiedRows,
-
-    //         totalResources,
-
-    //         totalSellingRate:
-    //             this.formatCurrency(firstBucket.totalSellingRate, firstCurrency),
-
-    //         totalProjectedRevenue:
-    //             this.formatCurrency(firstBucket.totalProjectedRevenue, firstCurrency),
-
-    //         averageSellingRate:
-    //             this.formatCurrency(avgSellingRate, firstCurrency),
-
-    //         currencyTotals: formattedCurrencyTotals,
-
-    //         regionSummary: regionMap,
-    //         experienceSummary: experienceMap,
-    //         buSummary: buMap,
-    //         subBuSummary: subBuMap,
-    //         skillSummary: skillMap,
-    //         typeSummary: typeMap
-    //     };
-
-    //     this.debounceSellingRateCall();
-    // }
-
-    // handlecalculateValues() {
-
-    //     let totalResources = 0;
-
-    //     const currencyTotals = {};
-
-    //     // 🔵 Insight Maps
-    //     let regionMap = {};
-    //     let experienceMap = {};
-    //     let buMap = {};
-    //     let subBuMap = {};
-    //     let skillMap = {};
-    //     let typeMap = {};
-
-    //     const modifiedRows = this.otherCharges.newchargesData.map((item, index) => {
-
-    //         const resources = Number(item.numberOfResources);
-    //         const duration = Number(item.durationMonths);
-
-    //         const safeResources = isNaN(resources) ? 0 : resources;
-    //         const safeDuration = isNaN(duration) ? 0 : duration;
-
-    //         const currency = item.currencyIsoCode || 'INR';
-
-    //         // ✅ Preserve values
-    //         const msaRate = Number(item.sellingRate) || 0;
-    //         const nonMsaRate = Number(item.nonMSASellingRate) || 0;
-
-    //         // ✅ Modified NON-MSA (user input)
-    //         const modifiedNonMsaRate =
-    //             Number(item.nonMSASellingRate) || nonMsaRate;
-
-    //         // =========================
-    //         // EFFECTIVE RATE
-    //         // =========================
-    //         let effectiveRate = 0;
-
-    //         if (item.isMSA) {
-    //             effectiveRate = msaRate;
-    //         } else {
-    //             effectiveRate = modifiedNonMsaRate;
-    //         }
-
-    //         // =========================
-    //         // FINAL REVENUE
-    //         // =========================
-    //         const projectedRevenue =
-    //             safeResources * effectiveRate * safeDuration;
-
-    //         totalResources += safeResources;
-
-    //         // 🔹 Currency grouping
-    //         if (!currencyTotals[currency]) {
-    //             currencyTotals[currency] = {
-    //                 totalSellingRate: 0,
-    //                 totalProjectedRevenue: 0,
-    //                 rowCount: 0
-    //             };
-    //         }
-
-    //         if (safeResources > 0) {
-    //             currencyTotals[currency].totalSellingRate += effectiveRate; // ✅ FIXED
-    //             currencyTotals[currency].totalProjectedRevenue += projectedRevenue;
-    //             currencyTotals[currency].rowCount++;
-    //         }
-
-    //         // 🔵 Insight Data (unchanged)
-    //         if (item.region) {
-    //             regionMap[item.region] = (regionMap[item.region] || 0) + safeResources;
-    //         }
-
-    //         if (item.experience) {
-    //             experienceMap[item.experience] = (experienceMap[item.experience] || 0) + safeResources;
-    //         }
-
-    //         if (item.businessUnit) {
-    //             buMap[item.businessUnit] = (buMap[item.businessUnit] || 0) + safeResources;
-    //         }
-
-    //         if (item.subBusinessUnit) {
-    //             subBuMap[item.subBusinessUnit] = (subBuMap[item.subBusinessUnit] || 0) + safeResources;
-    //         }
-
-    //         const updatedRow = {
-    //             ...item,
-    //             sequenceNo: index + 1,
-    //             projectedRevenue,
-
-    //             // ✅ formatted with correct logic
-    //             formattedSellingRate:
-    //                 this.formatCurrency(msaRate, currency),
-
-    //             formattedNonMSASellingRate:
-    //                 this.formatCurrency(modifiedNonMsaRate, currency),
-
-    //             formattedProjectedRevenue:
-    //                 this.formatCurrency(projectedRevenue, currency)
-    //         };
-
-    //         updatedRow.headerLabel = this.buildAccordionHeader(updatedRow);
-
-    //         return updatedRow;
-
-    //     });
-
-    //     // 🔹 Convert currency totals
-    //     const formattedCurrencyTotals = Object.keys(currencyTotals).map(curr => {
-
-    //         const bucket = currencyTotals[curr];
-
-    //         const avg =
-    //             bucket.rowCount > 0
-    //                 ? bucket.totalSellingRate / bucket.rowCount
-    //                 : 0;
-
-    //         return {
-    //             currency: curr,
-    //             totalSellingRate:
-    //                 this.formatCurrency(bucket.totalSellingRate, curr),
-
-    //             totalProjectedRevenue:
-    //                 this.formatCurrency(bucket.totalProjectedRevenue, curr),
-
-    //             averageSellingRate:
-    //                 this.formatCurrency(avg, curr)
-    //         };
-
-    //     });
-
-    //     // 🔹 Single currency fallback
-    //     const firstCurrency = Object.keys(currencyTotals)[0] || 'INR';
-    //     const firstBucket = currencyTotals[firstCurrency] || {
-    //         totalSellingRate: 0,
-    //         totalProjectedRevenue: 0,
-    //         rowCount: 0
-    //     };
-
-    //     const avgSellingRate =
-    //         firstBucket.rowCount > 0
-    //             ? firstBucket.totalSellingRate / firstBucket.rowCount
-    //             : 0;
-
-    //     // 🔵 RAW DATA
-    //     this.otherCharges.modifiedData = {
-    //         rows: modifiedRows,
-
-    //         totalResources,
-    //         currencyTotals,
-
-    //         regionSummary: regionMap,
-    //         experienceSummary: experienceMap,
-    //         buSummary: buMap,
-    //         subBuSummary: subBuMap,
-    //         skillSummary: skillMap,
-    //         typeSummary: typeMap,
-
-    //         opportunityId: this.recordId
-    //     };
-
-    //     // 🔵 STRING FORMAT FOR UI
-    //     this.otherCharges.modifiedDataInStringFormat = {
-    //         rows: modifiedRows,
-
-    //         totalResources,
-
-    //         totalSellingRate:
-    //             this.formatCurrency(firstBucket.totalSellingRate, firstCurrency),
-
-    //         totalProjectedRevenue:
-    //             this.formatCurrency(firstBucket.totalProjectedRevenue, firstCurrency),
-
-    //         averageSellingRate:
-    //             this.formatCurrency(avgSellingRate, firstCurrency),
-
-    //         currencyTotals: formattedCurrencyTotals,
-
-    //         regionSummary: regionMap,
-    //         experienceSummary: experienceMap,
-    //         buSummary: buMap,
-    //         subBuSummary: subBuMap,
-    //         skillSummary: skillMap,
-    //         typeSummary: typeMap
-    //     };
-
-    //     this.debounceSellingRateCall();
-    // }
-
     handlecalculateValues() {
 
         let totalResources = 0;
@@ -2354,9 +1862,9 @@ export default class ResourceCreationBulk extends LightningElement {
             return {
                 rliRecord: {
                     Id: row?.id || ('temp_' + index),
-                    Business_Unit__c: row?.businessUnit || null,
+                    Sub_Skills__c: row?.parentskillbusinessUnit || null,
                     Sub_Business_Unit__c: row?.subBusinessUnit || null,
-                    Sub_Skills__c: row?.subBusinessUnitskills || null,
+                    Business_Unit__c: row?.childBusinessUnitskills || null,
                     Category__c: row?.category || null,
                     Skill_Functional_Area__c: row?.skillFunctionalArea || null,
                     Region__c: row?.region || null,
@@ -2448,7 +1956,7 @@ export default class ResourceCreationBulk extends LightningElement {
                 this.otherCharges.newchargesData = [
                     ...(this.otherCharges?.newchargesData || [])
                 ];
-                //console.log('final Data inside selling: ' + JSON.stringify(this.otherCharges.newchargesData));
+                console.log('final Data inside selling: ' + JSON.stringify(this.otherCharges.newchargesData));
 
             }).catch(error => {
                 console.error(error);
@@ -2457,317 +1965,6 @@ export default class ResourceCreationBulk extends LightningElement {
                 this.showSpinner = false;
             });
     }
-
-
-    // getSellingRateInformationCall() {
-
-    //     const rowsForApex = (this.otherCharges?.newchargesData || []).map((row, index) => {
-    //         return {
-    //             rliRecord: {
-    //                 Id: row?.id || ('temp_' + index),
-    //                 Business_Unit__c: row?.businessUnit || null,
-    //                 Sub_Business_Unit__c: row?.subBusinessUnit || null,
-    //                 Sub_Skills__c: row?.subBusinessUnitskills || null,
-    //                 Category__c: row?.category || null,
-    //                 Skill_Functional_Area__c: row?.skillFunctionalArea || null,
-    //                 Region__c: row?.region || null,
-    //                 Sales_Unit__c: row?.salesUnit || null,
-    //                 Selling_Rate__c: row?.sellingRate ?? 0,
-    //                 Sales_Selling_Rate__c: row?.nonMSASellingRate ?? 0,
-    //                 CurrencyIsoCode: row?.currencyIsoCode || 'INR',
-    //                 Duration_Months__c: row?.durationMonths ?? 0,
-    //                 Status__c: row?.status || null,
-    //                 Engineer_Name__c: row?.engineerName || null,
-    //                 Tentative_Start_Date__c: row?.tentativeStartDate || null,
-    //                 Billing_Start_Date__c: row?.billingStartDate || null,
-    //                 Number_of_Resources__c: row?.numberOfResources ?? 0,
-    //                 Skill_Category_Matrix__c: row?.skillCategoryMatrixId || null,
-    //                 Experience1__c: row?.experienceId || null,
-    //                 Opportunity__c: this.recordId,
-    //                 Remarks__c: row?.isRemarksRequired ? row?.remarks : null,
-    //                 Lost_Remarks__c: row?.isLostRemarksRequired ? row?.lostremarks : null,
-    //                 Lost_Reason__c: row?.isLostRemarksRequired ? row?.lostreasonvalue : null,
-    //             },
-    //             sequenceNo: row?.sequenceNo ?? index,
-    //             recordExists: Boolean(row?.recordExists),
-    //             isMSA: Boolean(row?.isMSA),
-    //             isNonMSA: Boolean(row?.isNonMSA),
-    //         };
-    //     });
-
-    //     getSellingRateInformation({
-    //         rows: rowsForApex,
-    //         opportunityId: this.recordId
-    //     })
-    //         .then(result => {
-
-    //             const resultMap = new Map();
-
-    //             (result || []).forEach(wrap => {
-    //                 if (wrap?.rliRecord?.Id) {
-    //                     resultMap.set(String(wrap.rliRecord.Id), wrap);
-    //                 }
-    //                 if (wrap?.sequenceNo !== undefined && wrap?.sequenceNo !== null) {
-    //                     resultMap.set(String(wrap.sequenceNo), wrap);
-    //                 }
-    //             });
-
-    //             (this.otherCharges?.newchargesData || []).forEach(row => {
-
-    //                 const rowId = row?.id ? String(row.id) : null;
-    //                 const rowSeq = row?.sequenceNo !== undefined ? String(row.sequenceNo) : null;
-
-    //                 const wrap =
-    //                     (rowId && resultMap.get(rowId)) ||
-    //                     (rowSeq && resultMap.get(rowSeq)) ||
-    //                     null;
-
-    //                 // =========================
-    //                 // RATE EXTRACTION
-    //                 // =========================
-    //                 let msaRate = row?.sellingRate ?? 0;
-    //                 let nonMsaRate = row?.nonMSASellingRate ?? 0;
-
-    //                 if (wrap?.rateCardLines?.length > 0) {
-
-    //                     const msaCard = wrap.rateCardLines.find(r => r?.Rate_Card__r?.Type__c === 'MSA');
-    //                     const nonMsaCard = wrap.rateCardLines.find(r => r?.Rate_Card__r?.Type__c === 'Non MSA');
-
-    //                     msaRate = Number(msaCard?.Rate_Amount__c) || msaRate;
-    //                     nonMsaRate = Number(nonMsaCard?.Rate_Amount__c) || nonMsaRate;
-
-    //                     row.currencyIsoCode =
-    //                         msaCard?.CurrencyIsoCode ||
-    //                         nonMsaCard?.CurrencyIsoCode ||
-    //                         row?.currencyIsoCode ||
-    //                         'INR';
-
-    //                     row.rateCardLines = [...wrap.rateCardLines];
-
-    //                 } else if (wrap?.rliRecord?.Selling_Rate__c != null && row?.isMSA) {
-
-    //                     msaRate = Number(wrap.rliRecord.Selling_Rate__c) || msaRate;
-    //                     row.currencyIsoCode = wrap?.rliRecord?.CurrencyIsoCode || row?.currencyIsoCode || 'INR';
-
-    //                 } else if (wrap?.rliRecord?.Selling_Rate__c != null && row?.isNonMSA) {
-
-    //                     nonMsaRate = Number(wrap.rliRecord.Selling_Rate__c) || nonMsaRate;
-    //                     row.currencyIsoCode = wrap?.rliRecord?.CurrencyIsoCode || row?.currencyIsoCode || 'INR';
-    //                 }
-
-    //                 // =========================
-    //                 // STORE BASE VALUES
-    //                 // =========================
-    //                 row.msaRate = msaRate;
-    //                 row.nonMsaRate = nonMsaRate;
-
-    //                 // ✅ DO NOT override user input
-    //                 if (row.nonMSASellingRate === undefined || row.nonMSASellingRate === null) {
-    //                     row.nonMSASellingRate = row.nonMsaRate;
-    //                 }
-
-    //                 // =========================
-    //                 // FLAGS
-    //                 // =========================
-    //                 row.isMSA = Boolean(row?.isMSA);
-    //                 row.isNonMSA = !row.isMSA;
-
-    //                 // =========================
-    //                 // CALCULATION
-    //                 // =========================
-    //                 const resources = Number(row?.numberOfResources);
-    //                 const duration = Number(row?.durationMonths);
-
-    //                 const safeResources = isNaN(resources) ? 0 : resources;
-    //                 const safeDuration = isNaN(duration) ? 0 : duration;
-
-    //                 let effectiveRate = 0;
-
-    //                 if (row.isMSA) {
-
-    //                     row.sellingRate = row.msaRate;
-    //                     row.nonMSASellingRate = 0;
-    //                     row.margin = 0;
-
-    //                     effectiveRate = Number(row.msaRate) || 0;
-
-    //                 } else {
-
-    //                     // ✅ keep base always
-    //                     row.sellingRate = row.nonMsaRate;
-
-    //                     // ✅ use modified NON-MSA
-    //                     const nonMsaValue = Number(row.nonMSASellingRate) || 0;
-
-    //                     const marginValue =
-    //                         (row.nonMsaRate || 0) - nonMsaValue;
-
-    //                     row.margin = marginValue > 0 ? marginValue : 0;
-
-    //                     effectiveRate = nonMsaValue;
-    //                 }
-
-    //                 // =========================
-    //                 // REVENUE
-    //                 // =========================
-    //                 row.projectedRevenue =
-    //                     safeResources * effectiveRate * safeDuration;
-
-    //                 // =========================
-    //                 // FORMATTING
-    //                 // =========================
-    //                 row.formattedSellingRate =
-    //                     this.formatCurrency(Number(row.sellingRate) || 0, row.currencyIsoCode);
-
-    //                 row.formattedNonMSASellingRate =
-    //                     this.formatCurrency(Number(row.nonMSASellingRate) || 0, row.currencyIsoCode);
-
-    //                 row.formattedProjectedRevenue =
-    //                     this.formatCurrency(Number(row.projectedRevenue) || 0, row.currencyIsoCode);
-
-    //                 // ✅ show margin only if > 0
-    //                 row.formattedMargin =
-    //                     row.margin > 0
-    //                         ? this.formatCurrency(row.margin, row.currencyIsoCode)
-    //                         : '';
-
-    //                 row.headerLabel = this.buildAccordionHeader(row);
-
-    //                 console.log('FINAL ROW:', JSON.stringify({
-    //                     resources: safeResources,
-    //                     duration: safeDuration,
-    //                     effectiveRate,
-    //                     revenue: row.projectedRevenue,
-    //                     isMSA: row.isMSA
-    //                 }));
-    //             });
-
-    //             this.otherCharges.newchargesData = [
-    //                 ...(this.otherCharges?.newchargesData || [])
-    //             ];
-
-    //         })
-    //         .catch(error => {
-    //             console.error('getMasterDetails Error:' + this.parseError(error));
-    //             this.showErrorToast('Error', this.parseError(error));
-    //             this.showSpinner = false;
-    //         });
-    // }
-
-    // handleFilterSelection(event) {
-
-    //     const filterType = event.target.dataset.filterType;
-
-    //     console.log('🔎 Filter Selected:', filterType);
-    //     console.log('📦 Current Filter Options:', JSON.stringify(this.unitSalesStatusOptions));
-
-    //     this.unitSalesStatusOptions = this.unitSalesStatusOptions.map(option => {
-
-    //         option.checkBoxStatus = option.filterType === filterType;
-
-    //         return option;
-
-    //     });
-
-    //     console.log('✅ Updated Filter Options:', JSON.stringify(this.unitSalesStatusOptions));
-
-    //     this.applyRateCardFilter(filterType);
-    // }
-
-    // applyRateCardFilter(filterType) {
-
-    //     console.log('⚙️ Applying Status Filter:', filterType);
-
-    //     this.otherCharges.newchargesData =
-    //         this.otherCharges.newchargesData.map(row => {
-
-    //             if (filterType === 'ALL') {
-
-    //                 return {
-    //                     ...row,
-    //                     isVisible: true
-    //                 };
-
-    //             }
-
-    //             return {
-    //                 ...row,
-    //                 isVisible: row.status === filterType
-    //             };
-
-    //         });
-
-    // }
-    // unitSalesStatusOptions = [
-    //     {
-    //         salesStatus: 'All',
-    //         filterType: 'ALL',
-    //         checkBoxStatus: true,
-    //         unitCount: 0
-    //     },
-    //     {
-    //         salesStatus: 'Resource To Be Identified',
-    //         filterType: 'Resource To Be Identified',
-    //         checkBoxStatus: false,
-    //         unitCount: 0
-    //     },
-    //     {
-    //         salesStatus: 'Resource Shortlisted',
-    //         filterType: 'Resource Shortlisted',
-    //         checkBoxStatus: false,
-    //         unitCount: 0
-    //     },
-    //     {
-    //         salesStatus: 'Resource Fulfilled',
-    //         filterType: 'Resource Fulfilled',
-    //         checkBoxStatus: false,
-    //         unitCount: 0
-    //     },
-    //     {
-    //         salesStatus: 'Lost',
-    //         filterType: 'Lost',
-    //         checkBoxStatus: false,
-    //         unitCount: 0
-    //     }
-    // ];
-    // calculateStatusCounts(rows = []) {
-
-    //     let identified = 0;
-    //     let shortlisted = 0;
-    //     let fulfilled = 0;
-    //     let lost = 0;
-
-    //     rows.forEach(row => {
-
-    //         switch (row.status) {
-
-    //             case 'Resource To Be Identified':
-    //                 identified++;
-    //                 break;
-
-    //             case 'Resource Shortlisted':
-    //                 shortlisted++;
-    //                 break;
-
-    //             case 'Resource Fulfilled':
-    //                 fulfilled++;
-    //                 break;
-
-    //             case 'Lost':
-    //                 lost++;
-    //                 break;
-    //         }
-
-    //     });
-
-    //     return {
-    //         identified,
-    //         shortlisted,
-    //         fulfilled,
-    //         lost,
-    //         all: rows.length
-    //     };
-    // }
 
     formatCurrency(amount, currency) {
 
@@ -2853,17 +2050,17 @@ export default class ResourceCreationBulk extends LightningElement {
             }
 
 
-            this.checkField(row.businessUnit, index, 'businessUnit', 'Business Unit is required');
+            this.checkField(row.parentskillbusinessUnit, index, 'parentskillbusinessUnit', 'Business Unit is required');
             this.checkField(row.subBusinessUnit, index, 'subBusinessUnit', 'Sub Business Unit is required');
-            if (!(row.subBusinessUnit === 'Test Rental' && !row.subBusinessUnitskills)) {
+            if (!(row.subBusinessUnit === 'Tester Rental' && !row.childBusinessUnitskills)) {
                 this.checkField(
-                    row.subBusinessUnitskills,
+                    row.childBusinessUnitskills,
                     index,
-                    'subBusinessUnitskills',
+                    'childBusinessUnitskills',
                     'Sub Business Unit Skills is required'
                 );
             }
-            // this.checkField(row.subBusinessUnitskills, index, 'subBusinessUnitskills', 'Sub Business Unit Skills is required');
+            // this.checkField(row.childBusinessUnitskills, index, 'childBusinessUnitskills', 'Sub Business Unit Skills is required');
             this.checkField(row.region, index, 'region', 'Region is required');
             this.checkField(row.salesUnit, index, 'salesUnit', 'Sales Unit is required');
             this.checkField(row.durationMonths, index, 'durationMonths', 'Duration Months is required');
@@ -2874,9 +2071,9 @@ export default class ResourceCreationBulk extends LightningElement {
 
 
             if (!row.recordExists && (
-                !row.businessUnit ||
+                !row.parentskillbusinessUnit ||
                 !row.subBusinessUnit ||
-                (row.subBusinessUnit !== 'Test Rental' && !row.subBusinessUnitskills) ||
+                (row.subBusinessUnit !== 'Tester Rental' && !row.childBusinessUnitskills) ||
                 !row.region ||
                 !row.salesUnit ||
                 !row.durationMonths ||
@@ -2948,7 +2145,7 @@ export default class ResourceCreationBulk extends LightningElement {
     }
     get resourceOptions() {
         return this.otherCharges.newchargesData.map(row => ({
-            label: `${row.sequenceNo} - ${row.businessUnit} - ${row.status} `,
+            label: `${row.sequenceNo} - ${row.parentskillbusinessUnit} - ${row.status} `,
             value: row.id
         }));
     }
@@ -3022,9 +2219,9 @@ export default class ResourceCreationBulk extends LightningElement {
                 rliRecord: {
                     Id: row.id || ('temp_' + index),
 
-                    Business_Unit__c: row.businessUnit || null,
+                    Sub_Skills__c: row.parentskillbusinessUnit || null,
                     Sub_Business_Unit__c: row.subBusinessUnit || null,
-                    Sub_Skills__c: row.subBusinessUnitskills || null,
+                    Business_Unit__c: row.childBusinessUnitskills || null,
                     // Category__c: row.category || null,
                     // Skill_Functional_Area__c: row.skillFunctionalArea || null,
                     Region__c: row.region || null,
@@ -3095,78 +2292,6 @@ export default class ResourceCreationBulk extends LightningElement {
                 this.showSpinner = false;
             });
     }
-
-    // handleSave() {
-    //     console.log('Inside Save: '+ !this.validateFields());
-    //     if (!this.validateFields()) {
-    //         console.log('Validation failed');
-    //         return;
-    //     }
-    //     this.showSpinner = true;
-    //     const rowsForApex = this.otherCharges.newchargesData.map((row, index) => {
-
-    //         return {
-    //             rliRecord: {
-    //                 Id: row.id || ('temp_' + index),
-    //                 Business_Unit__c: row.businessUnit,
-    //                 Sub_Business_Unit__c: row.subBusinessUnit,
-    //                 Sub_Skills__c: row.subBusinessUnitskills,
-    //                 Category__c: row.category,
-    //                 Skill_Functional_Area__c: row.skillFunctionalArea,
-    //                 //Experience__c: row.experience,
-    //                 Region__c: row.region,
-    //                 Sales_Unit__c: row.salesUnit,
-    //                 // Ensure numeric value 
-    //                 Selling_Rate__c: row.sellingRate ? Number(row.sellingRate) : 0,
-    //                 Sales_Selling_Rate__c: row.nonMSASellingRate ? Number(row.nonMSASellingRate) : 0,
-    //                 // Ensure currency is sent
-    //                 CurrencyIsoCode: row.currencyIsoCode || null,
-    //                 Duration_Months__c: row.durationMonths,
-    //                 Status__c: row.status,
-    //                 Engineer_Name__c: row.engineerName,
-    //                 Tentative_Start_Date__c: row.tentativeStartDate,
-    //                 Billing_Start_Date__c: row.billingStartDate,
-    //                 Number_of_Resources__c: row.numberOfResources,
-    //                 Skill_Category_Matrix__c: row.skillCategoryMatrixId,
-    //                 Experience1__c: row.experienceId,
-    //                 Opportunity__c: this.recordId,
-    //                 Remarks__c: row.isRemarksRequired ? row.remarks : null,
-    //                 Lost_Remarks__c: row.isLostRemarksRequired ? row.lostremarks : null,
-    //                 Lost_Reason__c: row.isLostRemarksRequired ? row.lostreasonvalue : null,
-    //                 MSA_Customer__c: row.isMSA ? row.isMSA : row.isNonMSA,
-
-
-    //             },
-    //             sequenceNo: row.sequenceNo,
-    //             recordExists: row.recordExists,
-    //             isMSA: row.isMSA
-    //         };
-
-    //     });
-
-    //     saveDetails({
-    //         rows: rowsForApex,
-    //         opportunityId: this.recordId
-    //     }).then(result => {
-
-    //         console.log('saveDetails Result:', JSON.stringify(result));
-    //         const message = this.buildSaveSummaryMessage(result);
-    //         this.showSuccessToast('Success', message);
-    //         //this.showSuccessToast('Success', 'Resource Line Items Created Successfully');
-
-    //         setTimeout(() => {
-    //             this.showSpinner = false;
-    //             location.replace('/' + this.recordId);
-    //         }, 2000);
-    //     }).catch(error => {
-    //         console.log('saveDetails Error :' + JSON.stringify(error));
-    //         const errorMessage = this.parseError(error);
-    //         this.showErrorToast('Error', errorMessage);
-    //         this.showSpinner = false;
-
-    //     });
-
-    // }
 
     parseError(error) {
 

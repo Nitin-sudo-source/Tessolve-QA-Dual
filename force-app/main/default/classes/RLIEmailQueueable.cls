@@ -173,7 +173,7 @@ public class RLIEmailQueueable implements Queueable {
                 }
                 
                 //emailSet.addAll(buEmails);
-                emailSet.addAll(new  Set<String>{'nitin.c@kvpcorp.com','navneet.s@kvpcorp.com','sudharshan.sampath@tessolve.com','manojkumar.sadanandashetty@tessolve.com'});
+                emailSet.addAll(new  Set<String>{'nitin.c@kvpcorp.com','navneet.s@kvpcorp.com'});
                 
                 // Technical Owner
                 //if(!isFromOpp){
@@ -237,7 +237,7 @@ public class RLIEmailQueueable implements Queueable {
                         if (oppMap.containsKey(oppId)) {
                             for (Resource_Line_Item__c r : oppMap.get(oppId)) {
                                 if (r != null) {
-                                    r.Is_Email_Send__c = true;
+                                    //r.Is_Email_Send__c = true;
                                     r.Email_Sent_Date__c = System.today();
                                     updateList.add(r);
                                 }

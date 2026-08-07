@@ -29,9 +29,32 @@
 
 }
 
-.currency-input {
-    padding-left: 2rem;
+.currency-prefix {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #706e6b;
+    font-size: 0.875rem;
+    pointer-events: none;
+    min-width: 30px;
 }
+
+.slds-input-has-icon_left .currency-input {
+    padding-left: 2.75rem !important;
+}
+
+.slds-input__icon_left {
+    width: 3rem !important;
+    justify-content: center;
+}
+
+
+.currency-input {
+    padding-left: 48px !important;
+}
+
 .currency-prefix{
     font-size:14px;
     font-weight:600;

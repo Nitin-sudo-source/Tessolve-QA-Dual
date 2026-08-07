@@ -57,6 +57,6 @@ public class RevenueProjectionItemHelper {
             }
         }
         
-        RevenueProjectionItemRollup.rollupData(oppIds);
+      //  RevenueProjectionItemRollup.rollupData(oppIds);
     }
 }
