@@ -1,5 +1,4 @@
 import { LightningElement, api, track } from 'lwc';
-
 import startExport from '@salesforce/apex/RevenueProjectionExportController.startExport';
 import getJobStatus from '@salesforce/apex/RevenueProjectionExportController.getJobStatus';
 //import getLatestExportFile from '@salesforce/apex/RevenueProjectionExportController.getLatestExportFile';
@@ -9,6 +8,8 @@ import getExportFields from '@salesforce/apex/RevenueProjectionExportController.
 // import chartJs from '@salesforce/resourceUrl/ChartJS';
 // import { loadScript } from 'lightning/platformResourceLoader';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import getRevenuePeriods
+    from '@salesforce/apex/RevenuePeriodUtil.getRevenuePeriods';
 
 
 export default class OverAllOppRevenueDataSync extends LightningElement {
@@ -16,43 +17,95 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
     ownerChart;
     recordTypeChart;
     statusChart;
-
     chartJsInitialized = false;
-    @api recordId;
-
-    @api columns = [];
-
-    @track allColumns = [];
-
-    @track isLoading = false;
-
-    jobId;
-    pollingId;
-
-    @track previewData = [];
-    @track paginatedData = [];
-
     page = 1;
     pageSize = 50;
     totalPages = 1;
+    jobId;
+    pollingId;
+    searchKey = '';
+    @track previewData = [];
+    @track paginatedData = [];
+    @api recordId;
+    @api columns = [];
+    @track allColumns = [];
+    @track isLoading = false;
     @track filteredData = [];
 
-    searchKey = '';
+    @api lockedFields = [
+        'Name'
+    ];
 
-    // handleSaveColumns(event) {
-    //     try {
-    //         console.log('Received:', JSON.stringify(event.detail));
-    //         this.selectedFields = [...event.detail];
-    //         console.log('Received selectedFields:', JSON.stringify(this.selectedFields));
+    selectedStage = '';
+    selectedBusinessUnit = '';
+    selectedrecordType = '';
+    selectedOwner = '';
+    selectedGeo = '';
+    selectedbussinessType = '';
 
-    //         //this.selectedFields = event.detail;
+    selectedStages = [];
+    selectedBusinessUnits = [];
+    selectedOwners = [];
+    selectedRecordTypes = [];
+    selectedGeos = [];
+    selectedbussinessTypes = [];
 
-    //     } catch (error) {
-    //         console.error('Parent handleSave Error:', error);
-    //     }
+    stageOptions = [];
+    recordTypeNameOptions = [];
+    businessUnitOptions = [];
+    ownerOptions = [];
+    geoOptions = [];
 
-    // }
+    bussinessTypeOptions = [];
 
+    defaultSortDirection = 'asc';
+    sortDirection = 'asc';
+    sortedBy;
+    projectionFilter = 'ALL';
+    showColumnModal = false;
+
+    periodOptions = [];
+
+    periodConfigurations = [];
+
+    selectedPeriod;
+
+    fromDate;
+
+    toDate;
+
+    showCustomDate = false;
+
+
+
+    @track kpi = {
+        totalOpps: 0,
+        hasRP: 0,
+        noRP: 0,
+        totalTCV: 0,
+        totalACV: 0,
+        cqRevenue: 0,
+        nqRevenue: 0,
+        extendedRevenue: 0
+    };
+
+    columnMap = new Map();
+
+    sortBy(field, reverse, primer) {
+        const key = primer
+            ? function (x) {
+                return primer(x[field]);
+            }
+            : function (x) {
+                return x[field];
+            };
+
+        return function (a, b) {
+            a = key(a);
+            b = key(b);
+            return reverse * ((a > b) - (b > a));
+        };
+    }
 
     get totalRecordCount() {
         return this.previewData.length;
@@ -82,52 +135,189 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         }));
     }
 
-    @api lockedFields = [
-        'Name'
-    ];
+    get allVariant() {
+        return this.projectionFilter === 'ALL'
+            ? 'brand'
+            : 'neutral';
+    }
+
+    get hasVariant() {
+        return this.projectionFilter === 'HAS'
+            ? 'brand'
+            : 'neutral';
+    }
+
+    get noVariant() {
+        return this.projectionFilter === 'NO'
+            ? 'brand'
+            : 'neutral';
+    }
+
+    get hasActiveFilters() {
+        return (
+            this.selectedrecordType.length ||
+            this.selectedStage.length ||
+            this.selectedBusinessUnit.length ||
+            this.selectedOwner.length ||
+            this.selectedGeo.length ||
+            this.selectedbussinessType.length
+        );
+    }
 
 
+    get disablePrevious() {
+        return this.page === 1;
+    }
 
-    selectedStage = '';
-    selectedBusinessUnit = '';
-    selectedrecordType = '';
-    selectedOwner = '';
-    selectedGeo = '';
-    selectedbussinessType = '';
+    get disableNext() {
+        return this.page === this.totalPages;
+    }
 
-    selectedStages = [];
-    selectedBusinessUnits = [];
-    selectedOwners = [];
-    selectedRecordTypes = [];
-    selectedGeos = [];
-    selectedbussinessTypes = [];
+    get hasData() {
+        return this.filteredData.length > 0;
+    }
 
-    stageOptions = [];
-    recordTypeNameOptions = [];
-    businessUnitOptions = [];
-    ownerOptions = [];
-    geoOptions = [];
+    get totalTCVFormatted() {
+        return this.formatUSD(this.kpi.totalTCV);
+    }
 
-    bussinessTypeOptions = [];
+    get totalACVFormatted() {
+        return this.formatUSD(this.kpi.totalACV);
+    }
 
-    defaultSortDirection = 'asc';
-    sortDirection = 'asc';
-    sortedBy;
+    get cqRevenueFormatted() {
+        return this.formatUSD(this.kpi.cqRevenue);
+    }
 
-    sortBy(field, reverse, primer) {
-        const key = primer
-            ? function (x) {
-                return primer(x[field]);
-            }
-            : function (x) {
-                return x[field];
-            };
+    get nqRevenueFormatted() {
+        return this.formatUSD(this.kpi.nqRevenue);
+    }
 
-        return function (a, b) {
-            a = key(a);
-            b = key(b);
-            return reverse * ((a > b) - (b > a));
-        };
+    get extendedRevenueFormatted() {
+        return this.formatUSD(this.kpi.extendedRevenue);
+    }
+
+
+    get periodClass() {
+        return this.showCustomDate
+            ? 'slds-col slds-size_3-of-12'
+            : 'slds-col slds-size_2-of-12';
+    }
+
+
+    loadRevenuePeriods() {
+
+        getRevenuePeriods()
+
+            .then(result => {
+
+                this.periodConfigurations = result;
+                console.log('periodConfigurations: ' + JSON.stringify(this.periodConfigurations));
+
+                this.periodOptions = result.map(item => ({
+
+                    label: item.label,
+                    value: item.value
+
+                }));
+
+                const defaultPeriod = result.find(
+                    item => item.isDefault
+                );
+
+                if (defaultPeriod) {
+
+                    this.selectedPeriod = defaultPeriod.value;
+
+                    this.fromDate = defaultPeriod.fromDate;
+
+                    this.toDate = defaultPeriod.toDate;
+
+                    this.showCustomDate =
+                        defaultPeriod.isCustomRange;
+
+                }
+
+                this.applyFilters();
+
+            })
+
+            .catch(error => {
+
+                console.error(error);
+
+            });
+
+    }
+
+    handlePeriodChange(event) {
+
+        this.selectedPeriod = event.detail.value;
+
+        console.group('Revenue Period Changed');
+
+        console.log('Selected Period :', this.selectedPeriod);
+
+        const period = this.periodConfigurations.find(
+            item => item.value === this.selectedPeriod
+        );
+
+        console.log(
+            'Matched Configuration :\n',
+            JSON.stringify(period, null, 2)
+        );
+
+        if (!period) {
+            console.warn('No configuration found for:', this.selectedPeriod);
+            console.groupEnd();
+            return;
+        }
+
+        this.showCustomDate = period.isCustomRange;
+        this.fromDate = period.fromDate;
+        this.toDate = period.toDate;
+
+        console.table([{
+            Label: period.label,
+            Value: period.value,
+            Category: period.category,
+            FromDate: this.fromDate,
+            ToDate: this.toDate,
+            IsCustomRange: this.showCustomDate,
+            IsDefault: period.isDefault
+        }]);
+
+        if (!period.isCustomRange) {
+            this.applyFilters();
+        }
+
+        console.groupEnd();
+    }
+
+    handleFrom(event) {
+
+        this.fromDate = event.target.value;
+
+    }
+
+    handleTo(event) {
+
+        this.toDate = event.target.value;
+
+    }
+
+    apply() {
+
+        this.applyFilters();
+
+    }
+
+
+    connectedCallback() {
+
+        this.loadColumns();
+        this.loadRevenuePeriods();
+
     }
 
     onHandleSort(event) {
@@ -139,8 +329,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         this.sortDirection = sortDirection;
         this.sortedBy = sortedBy;
     }
-
-
 
     handleStageChange(event) {
         this.selectedStage = event.detail;
@@ -180,28 +368,13 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
     }
 
-    get allVariant() {
-        return this.projectionFilter === 'ALL'
-            ? 'brand'
-            : 'neutral';
-    }
-
-    projectionFilter = 'ALL';
-
-    get hasVariant() {
-        return this.projectionFilter === 'HAS'
-            ? 'brand'
-            : 'neutral';
-    }
-
-    get noVariant() {
-        return this.projectionFilter === 'NO'
-            ? 'brand'
-            : 'neutral';
-    }
-
-
     applyFilters() {
+        console.table(
+            this.previewData.slice(0, 10).map(r => ({
+                Name: r.Name,
+                CloseDate: r.CloseDate
+            }))
+        );
 
         const searchText = (this.searchKey || '').toLowerCase();
 
@@ -295,6 +468,16 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
                     row.revenueProjectionStatus !== 'Has Revenue Projection'
                 );
 
+            const matchesRevenuePeriod =
+
+                !this.fromDate ||
+
+                (
+                    row.CloseDate &&
+                    row.CloseDate >= this.fromDate &&
+                    row.CloseDate <= this.toDate
+                );
+
             return (
                 matchesSearch &&
                 matchesRecordType &&
@@ -303,7 +486,8 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
                 matchesOwner &&
                 matchesGeo &&
                 matchesBuType &&
-                matchesProjection
+                matchesProjection &&
+                matchesRevenuePeriod
             );
 
         });
@@ -320,16 +504,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         this.updatePagination();
 
     }
-    get hasActiveFilters() {
-        return (
-            this.selectedrecordType.length ||
-            this.selectedStage.length ||
-            this.selectedBusinessUnit.length ||
-            this.selectedOwner.length ||
-            this.selectedGeo.length ||
-            this.selectedbussinessType.length
-        );
-    }
     removeFilter(event) {
 
         const value = event.target.name;
@@ -338,40 +512,68 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         switch (filter) {
 
             case 'recordType':
+
                 this.selectedrecordType =
                     this.selectedrecordType.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="recordType"]')
+                    ?.setValue(this.selectedrecordType);
+
                 break;
 
             case 'stage':
+
                 this.selectedStage =
                     this.selectedStage.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="stage"]')
+                    ?.setValue(this.selectedStage);
+
                 break;
 
             case 'businessUnit':
+
                 this.selectedBusinessUnit =
                     this.selectedBusinessUnit.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="businessUnit"]')
+                    ?.setValue(this.selectedBusinessUnit);
+
                 break;
 
             case 'owner':
+
                 this.selectedOwner =
                     this.selectedOwner.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="owner"]')
+                    ?.setValue(this.selectedOwner);
+
                 break;
 
             case 'geo':
+
                 this.selectedGeo =
                     this.selectedGeo.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="geo"]')
+                    ?.setValue(this.selectedGeo);
+
                 break;
 
             case 'bussinesstype':
+
                 this.selectedbussinessType =
                     this.selectedbussinessType.filter(v => v !== value);
+
+                this.template.querySelector('[data-id="bussinessType"]')
+                    ?.setValue(this.selectedbussinessType);
+
                 break;
         }
 
         this.applyFilters();
     }
-
-
     clearFilters() {
 
         this.searchKey = '';
@@ -389,7 +591,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
         this.applyFilters();
     }
-
     handleFilterChange(event) {
         const { name, value } = event.target;
 
@@ -660,10 +861,7 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
             });
 
     }
-    connectedCallback() {
-        this.loadColumns();
 
-    }
 
     applyColumnSelection() {
 
@@ -671,8 +869,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
         this.closeColumnModal();
     }
-
-    showColumnModal = false;
 
     openColumnModal() {
         this.showColumnModal = true;
@@ -720,29 +916,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         }
 
     }
-
-    get disablePrevious() {
-        return this.page === 1;
-    }
-
-    get disableNext() {
-        return this.page === this.totalPages;
-    }
-
-    get hasData() {
-        return this.filteredData.length > 0;
-    }
-
-    @track kpi = {
-        totalOpps: 0,
-        hasRP: 0,
-        noRP: 0,
-        totalTCV: 0,
-        totalACV: 0,
-        cqRevenue: 0,
-        nqRevenue: 0,
-        extendedRevenue: 0
-    };
 
     calculateKPIs(data) {
 
@@ -959,22 +1132,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
     }
 
-
-
-    currencyFormatter = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        notation: 'compact',
-        compactDisplay: 'short',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 1
-    });
-
-    formatUSD(value) {
-        return this.currencyFormatter.format(Number(value || 0));
-    }
-
-
     handleExport() {
 
         let exportColumns = [];
@@ -1039,31 +1196,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
 
     }
 
-    // updateColumns() {
-
-    //     this.columns = this.selectedFields
-    //         .map(fieldName => this.columnMap.get(fieldName))
-    //         .filter(Boolean);
-    // }
-
-    // selectedFields = [
-    //     'opportunityLink',
-    //     'stageName',
-    //     'bussinessType',
-    //     'tcvUSDFormatted',
-    //     'acvUSDFormatted',
-    //     'q1Formatted',
-    //     'q2Formatted',
-    //     'q3Formatted',
-    //     'q4Formatted',
-    //     'q5Formatted',
-    //     'q6Formatted',
-    //     'q7Formatted',
-    //     'q8Formatted',
-    //     'extendedFormatted'
-    // ];
-
-    columnMap = new Map();
 
     handleSaveColumns() {
         const columnManager = this.template.querySelector('c-column-manager');
@@ -1182,8 +1314,6 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
             });
     }
 
-
-
     showToast(title, message, variant) {
 
         this.dispatchEvent(
@@ -1199,32 +1329,24 @@ export default class OverAllOppRevenueDataSync extends LightningElement {
         );
 
     }
-
-    get totalTCVFormatted() {
-        return this.formatUSD(this.kpi.totalTCV);
-    }
-
-    get totalACVFormatted() {
-        return this.formatUSD(this.kpi.totalACV);
-    }
-
-    get cqRevenueFormatted() {
-        return this.formatUSD(this.kpi.cqRevenue);
-    }
-
-    get nqRevenueFormatted() {
-        return this.formatUSD(this.kpi.nqRevenue);
-    }
-
-    get extendedRevenueFormatted() {
-        return this.formatUSD(this.kpi.extendedRevenue);
-    }
-
     formatCurrency(value) {
         return new Intl.NumberFormat('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(value || 0);
+    }
+
+    currencyFormatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        notation: 'compact',
+        compactDisplay: 'short',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1
+    });
+
+    formatUSD(value) {
+        return this.currencyFormatter.format(Number(value || 0));
     }
 
 

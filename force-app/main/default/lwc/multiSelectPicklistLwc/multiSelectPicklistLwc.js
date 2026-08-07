@@ -8,7 +8,7 @@
  * Ver   Date         Author       Modification
  * 1.0   29-06-2026   Nitin Choudhary   Initial Version
 **/
-import {LightningElement, api, track} from 'lwc';
+import { LightningElement, api, track } from 'lwc';
 export default class MultiSelectPicklistLwc extends LightningElement {
 
     /* 
@@ -35,15 +35,56 @@ export default class MultiSelectPicklistLwc extends LightningElement {
             console.log(JSON.stringify(event.detail));
         }
     */
+    @api
+    setValue(values) {
 
+        this.value = [];
 
+        if (!values || values.length === 0) {
+            this.handleAllOption();
+            return;
+        }
+
+        // Clear previous selections
+        this.template.querySelectorAll('.slds-is-selected')
+            .forEach(el => el.classList.remove('slds-is-selected'));
+
+        const allOption = this.template.querySelector('[data-id="All"]');
+        if (allOption) {
+            allOption.firstChild.classList.remove('slds-is-selected');
+        }
+
+        values.forEach(v => {
+
+            const option = this.options.find(o => o.value === v);
+
+            if (option) {
+                this.value.push(option);
+
+                const element = this.template.querySelector(`[data-id="${v}"]`);
+
+                if (element) {
+                    element.firstChild.classList.add('slds-is-selected');
+                }
+            }
+
+        });
+
+        if (this.value.length > 1) {
+            this.inputValue = `${this.value.length} options selected`;
+        } else if (this.value.length === 1) {
+            this.inputValue = this.value[0].label;
+        } else {
+            this.inputValue = 'All';
+        }
+    }
     @api label = "Default label";
     _disabled = false;
     @api
-    get disabled(){
+    get disabled() {
         return this._disabled;
     }
-    set disabled(value){
+    set disabled(value) {
         this._disabled = value;
         this.handleDisabled();
     }
@@ -60,8 +101,9 @@ export default class MultiSelectPicklistLwc extends LightningElement {
         this.inputOptions = options.concat(value);
     }
     @api
-    clear(){
+    clear() {
         this.handleAllOption();
+        this.sendValues();
     }
     value = [];
     @track inputValue = 'All';
@@ -73,9 +115,9 @@ export default class MultiSelectPicklistLwc extends LightningElement {
         }
         this.hasRendered = true;
     }
-    handleDisabled(){
+    handleDisabled() {
         let input = this.template.querySelector("input");
-        if (input){
+        if (input) {
             input.disabled = this.disabled;
         }
     }
@@ -83,7 +125,7 @@ export default class MultiSelectPicklistLwc extends LightningElement {
     handleClick() {
         let sldsCombobox = this.template.querySelector(".slds-combobox");
         sldsCombobox.classList.toggle("slds-is-open");
-        if (!this.comboboxIsRendered){
+        if (!this.comboboxIsRendered) {
             let allOption = this.template.querySelector('[data-id="All"]');
             allOption.firstChild.classList.add("slds-is-selected");
             this.comboboxIsRendered = true;
@@ -101,7 +143,7 @@ export default class MultiSelectPicklistLwc extends LightningElement {
         input.focus();
         this.sendValues();
     }
-    sendValues(){
+    sendValues() {
         let values = [];
         for (const valueObject of this.value) {
             values.push(valueObject.value);
@@ -110,7 +152,7 @@ export default class MultiSelectPicklistLwc extends LightningElement {
             detail: values
         }));
     }
-    handleAllOption(){
+    handleAllOption() {
         this.value = [];
         this.inputValue = 'All';
         let listBoxOptions = this.template.querySelectorAll('.slds-is-selected');
@@ -121,7 +163,7 @@ export default class MultiSelectPicklistLwc extends LightningElement {
         allOption.firstChild.classList.add("slds-is-selected");
         this.closeDropbox();
     }
-    handleOption(event, value){
+    handleOption(event, value) {
         let listBoxOption = event.currentTarget.firstChild;
         if (listBoxOption.classList.contains("slds-is-selected")) {
             this.value = this.value.filter(option => option.value !== value);

@@ -1,23 +1,127 @@
 <template>
+    <div class="resnitin">
 
+   
     <lightning-card>
         <div class="slds-p-around_medium">
-            <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
-                <div class="slds-col slds-size_2-of-4">
-                    <div class="dashboard-header">
+            <!-- ================= Dashboard Header ================= -->
 
-                        <h1>Revenue Projection Dashboard</h1>
+            <div class="slds-grid slds-wrap slds-grid_align-spread slds-grid_vertical-align-start slds-m-bottom_large">
 
-                        <p>
-                            Opportunity Revenue Summary • USD • Updated in Real Time
-                        </p>
+                <!-- Left Section -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_7-of-12">
+                    
+                      <div class="summary-title">
+            Revenue View Summary
+        </div>
+
+                   <div class="filter-summary">
+
+
+    <lightning-icon
+        icon-name="utility:info_alt"
+        size="xx-small"
+        class="summary-icon">
+    </lightning-icon>
+
+    <span class="summary-text">
+
+        Showing
+        <span class="summary-highlight">{kpi.totalOpps}</span>
+        Opportunities
+
+        <template if:true={selectedPeriod}>
+            <span class="summary-divider">|</span>
+
+            <span class="summary-label">Revenue Period</span>
+
+            <span class="summary-pill">
+                {selectedPeriod}
+            </span>
+        </template>
+
+        <template if:true={fromDate}>
+
+            <span class="summary-divider">|</span>
+
+            <span class="summary-label">Close Date</span>
+
+            <span class="summary-date">
+
+                <lightning-formatted-date-time
+                    value={fromDate}
+                    day="2-digit"
+                    month="short"
+                    year="numeric">
+                </lightning-formatted-date-time>
+
+                <span class="date-separator">→</span>
+
+                <lightning-formatted-date-time
+                    value={toDate}
+                    day="2-digit"
+                    month="short"
+                    year="numeric">
+                </lightning-formatted-date-time>
+
+            </span>
+
+        </template>
+
+    </span>
+
+</div>
+
+                    
+
+                    <!-- Revenue Period -->
+                    <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
+
+                        <!-- Revenue Period -->
+                        <div class={periodClass}>
+
+                            <lightning-combobox label="Revenue Period" value={selectedPeriod} options={periodOptions}
+                                onchange={handlePeriodChange}>
+                            </lightning-combobox>
+
+                        </div>
+
+                        <!-- From Date -->
+                        <template if:true={showCustomDate}>
+
+                            <div class="slds-col slds-size_2-of-12">
+
+                                <lightning-input type="date" label="From Date" value={fromDate} onchange={handleFrom}>
+                                </lightning-input>
+
+                            </div>
+
+                            <!-- To Date -->
+
+                            <div class="slds-col slds-size_2-of-12">
+
+                                <lightning-input type="date" label="To Date" value={toDate} onchange={handleTo}>
+                                </lightning-input>
+
+                            </div>
+
+                            <div class="slds-col slds-size_1-of-12 slds-align-bottom">
+
+                                <lightning-button variant="brand" label="Apply" onclick={apply}>
+                                </lightning-button>
+
+                            </div>
+
+                        </template>
 
                     </div>
+
                 </div>
 
-                <div class="slds-col slds-size_2-of-4">
+                <!-- Right Section -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_5-of-12">
 
-                    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-end">
+                    <div class="slds-grid slds-grid_align-end slds-grid_vertical-align-center slds-wrap">
 
                         <lightning-button-group>
 
@@ -36,47 +140,57 @@
                         </lightning-button-group>
 
                         <div class="slds-m-left_medium">
+
                             <lightning-button variant="neutral" label="Clear All Filters" icon-name="utility:refresh"
                                 onclick={clearFilters}>
                             </lightning-button>
+
                         </div>
 
                     </div>
 
                 </div>
+
             </div>
+
+            <!-- ================= Custom Date Panel ================= -->
+
+
             <div class="slds-grid slds-wrap slds-gutters slds-m-bottom_medium">
 
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Engagement Model" options={recordTypeNameOptions}
-                        onvaluechange={handleRecordTypeChange}>
+                    <c-multi-select-picklist-lwc data-id="recordType" label="Engagement Model"
+                        options={recordTypeNameOptions} onvaluechange={handleRecordTypeChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
 
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Stage" options={stageOptions} onvaluechange={handleStageChange}>
+                    <c-multi-select-picklist-lwc data-id="stage" label="Stage" options={stageOptions}
+                        onvaluechange={handleStageChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
 
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Business Unit" options={businessUnitOptions}
-                        onvaluechange={handleBusinessUnitChange}>
+                    <c-multi-select-picklist-lwc data-id="businessUnit" label="Business Unit"
+                        options={businessUnitOptions} onvaluechange={handleBusinessUnitChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
 
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Geo Wise" options={geoOptions} onvaluechange={handleGeoChange}>
+                    <c-multi-select-picklist-lwc data-id="geo" label="Geo Wise" options={geoOptions}
+                        onvaluechange={handleGeoChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
 
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Opportunity Owner" options={ownerOptions}
+                    <c-multi-select-picklist-lwc data-id="owner" label="Opportunity Owner" options={ownerOptions}
                         onvaluechange={handleOwnerChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
+
                 <div class="slds-col slds-size_2-of-12">
-                    <c-multi-select-picklist-lwc label="Bussiness Type" options={bussinessTypeOptions}
-                        onvaluechange={handleBussinessTypeChange}>
+                    <c-multi-select-picklist-lwc data-id="bussinessType" label="Business Type"
+                        options={bussinessTypeOptions} onvaluechange={handleBussinessTypeChange}>
                     </c-multi-select-picklist-lwc>
                 </div>
 
@@ -132,6 +246,7 @@
 
                 </div>
             </template>
+
             <!-- <div class="action-center slds-m-top_large"> -->
 
 
@@ -502,5 +617,7 @@
         </div>
 
     </lightning-card>
+
+     </div>
 
 </template>
